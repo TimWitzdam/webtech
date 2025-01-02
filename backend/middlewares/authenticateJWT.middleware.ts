@@ -1,47 +1,28 @@
 import jwt from "jsonwebtoken";
 import type { Request, Response, NextFunction } from "express";
 import { JWT_SECRET } from "../configs/app.config";
-import { User } from "../types/User";
-import { AuthenticatedRequest } from "../types/AuthenticatedRequest";
-
-function getCookie(cookies: string | undefined, name: string) {
-  const value = `; ${cookies}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()?.split(";").shift();
-}
+import User from "../models/user.model";
 
 export const authenticateJWT = (
   req: Request,
   res: Response,
   next: NextFunction,
-  redirectOnSuccess: boolean | undefined = undefined
 ) => {
-  const token = getCookie(req.headers.cookie, "auth_session");
-
+  const token = req.cookies["auth_session"];
   if (token) {
-    jwt.verify(token, JWT_SECRET, (err, user) => {
+    jwt.verify(token, JWT_SECRET, async (err: any, decoded: any) => {
       if (err) {
-        if (redirectOnSuccess === false) {
-          return res.redirect("/login");
-        } else if (redirectOnSuccess === undefined) {
-          return res.status(403).json({ message: "Invalid token" });
-        }
+        return res.status(403).redirect("/login");
       }
 
-      if (redirectOnSuccess === true) {
-        return res.redirect("/dashboard");
+      let result = await User.findOne({ secret: decoded });
+      if (result) {
+        if (result.secret === decoded) next();
+      } else {
+        return res.status(403).redirect("/login");
       }
-
-      (req as AuthenticatedRequest).user = user as User;
-      next();
     });
   } else {
-    if (redirectOnSuccess === false) {
-      return res.redirect("/login");
-    } else if (redirectOnSuccess === true) {
-      next();
-    } else {
-      res.status(401).json({ message: "No token provided" });
-    }
+    return res.status(403).redirect("/login");
   }
 };

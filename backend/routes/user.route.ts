@@ -12,6 +12,6 @@ userRouter.post(
   validateSchema(authRequest),
   UserController.register,
 );
-userRouter.get("/user/name", authenticateJWT, UserController.getUsername);
+userRouter.get("/user/token", authenticateJWT, UserController.getUsername);
 
 export default userRouter;
