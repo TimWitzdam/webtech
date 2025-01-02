@@ -1,10 +1,9 @@
 import express from "express";
-import Logger from "./lib/logger";
+import { logger } from "./configs/app.config";
 import { PORT, MONGO_URL } from "./configs/app.config";
 import apiRouter from "./routes/index.route";
-import { connect } from "mongoose"
+import { connect } from "mongoose";
 
-const logger = new Logger("server");
 logger.info("Server starting");
 
 const app = express();
@@ -18,9 +17,8 @@ async function main() {
     console.error("Database connectionURL missing!");
     process.exit(1);
   }
-  const mongooseResponse = await connect(connectionURL)
-  logger.info(`DB connected mongodb ${mongooseResponse.version}!`)
-
+  const mongooseResponse = await connect(connectionURL);
+  logger.info(`DB connected mongodb ${mongooseResponse.version}!`);
 
   app.listen(PORT, () => {
     logger.info(`Server running on port ${PORT}`);

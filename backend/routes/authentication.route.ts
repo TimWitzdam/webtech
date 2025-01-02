@@ -4,14 +4,24 @@ import { authRequest } from "../models/user.request";
 import { UserController } from "../controllers/user.controller";
 import { authenticateJWT } from "../middlewares/authenticateJWT.middleware";
 
-const userRouter = express.Router();
+const authenticationRoutes = express.Router();
 
-userRouter.post("/login", validateSchema(authRequest), UserController.login);
-userRouter.post(
-  "/register",
+authenticationRoutes.post(
+  "/user/login",
+  validateSchema(authRequest),
+  UserController.login,
+);
+
+authenticationRoutes.post(
+  "/user/register",
   validateSchema(authRequest),
   UserController.register,
 );
-userRouter.get("/user/token", authenticateJWT, UserController.getUsername);
 
-export default userRouter;
+authenticationRoutes.get(
+  "/user/information",
+  authenticateJWT,
+  UserController.getUserInformation,
+);
+
+export default authenticationRoutes;

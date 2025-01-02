@@ -1,29 +1,33 @@
 import { UserService } from "../services/user.service";
-import { JWT_SECRET } from "../configs/app.config";
-import jwt from "jsonwebtoken";
+import { JWTService } from "../services/jwt.service";
+import { logger, SALT } from "../configs/app.config";
+import { ObjectId } from "mongoose";
 import bcrypt from "bcryptjs";
 import { Request, Response } from "express";
-import { AuthenticatedRequest } from "../types/AuthenticatedRequest";
 
 export class UserController {
   static async login(req: Request, res: Response) {
     const username = req.body.username;
     const password = req.body.password;
 
-    const user = await UserService.getUserByUsername(username);
+    const user = await UserService.getInformation(
+      (await UserService.getIdByUsername(username)) as ObjectId,
+    );
 
     if (!user) {
-      res.status(401).send("Invalid credentials");
+      res.status(401).send("Falsche Zugangsdaten!");
       return;
     }
 
     bcrypt.compare(password, user.password, (err, result) => {
       if (err || !result) {
-        res.status(401).send("Invalid credentials");
+        res.status(401).send("Falsche Zugangsdaten!");
         return;
       }
 
-      const token = this.createJWTToken(username);
+      const token = JWTService.createJWTToken(
+        (user._id as ObjectId).toString(),
+      );
       res.json({ token });
     });
   }
@@ -32,28 +36,42 @@ export class UserController {
     const username = req.body.username;
     const password = req.body.password;
 
-    bcrypt.hash(password, 10, (err, hash) => {
-      if (err) {
-        res.status(500).send("Internal server error");
+    if (!SALT) {
+      logger.error(".ENV error SALT is unknown!");
+      res.status(500).send("Etwas ist schiefgelaufen!");
+      return;
+    }
+
+    try {
+      let hash = await bcrypt.hash(password, SALT);
+      if (hash) {
+        const userID = await UserService.createUser(username, hash);
+        const token = JWTService.createJWTToken(userID.toString());
+        res.json({ token });
+        return;
+      } else {
+        res.status(500).send("Etwas ist schiefgelaufen!");
         return;
       }
-
-      const token = this.createJWTToken(username);
-      UserService.createUser(username, hash);
-
-      res.json({ token });
-    });
+    } catch (err) {
+      logger.error(`bcrypt error: ${err}`);
+      res.status(500).send("Etwas ist schiefgelaufen!");
+      return;
+    }
   }
 
-  static async getUsername(req: Request, res: Response) {
-    const username = (req as AuthenticatedRequest).user.username;
-    res.json({ username });
-  }
+  static async getUserInformation(req: Request, res: Response) {
+    const decodedJWT = res.locals.decodedJWT;
+    if (!decodedJWT) return res.status(403).redirect("/login");
 
-  static createJWTToken(username: string) {
-    const jwtToken = jwt.sign({ username: username }, JWT_SECRET, {
-      expiresIn: "7d",
+    const userInformation = await UserService.getInformation(
+      (await UserService.getId(decodedJWT as ObjectId)) as ObjectId,
+    );
+    if (!userInformation) return res.status(403).redirect("/login");
+
+    res.json({
+      username: userInformation.username,
+      role: userInformation.role,
     });
-    return jwtToken;
   }
 }
