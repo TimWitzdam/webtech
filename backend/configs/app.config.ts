@@ -8,6 +8,5 @@ if (!process.env.JWT_SECRET) {
 }
 export const JWT_SECRET = process.env.JWT_SECRET;
 export const MONGO_URL = process.env.MONGO_URL;
-export const SALT = process.env.SALT;
 export const ROLES = ["Student", "Professor", "Assistent", "Administrator"];
 export const logger = new Logger("server");

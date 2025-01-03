@@ -1,6 +1,6 @@
 import { UserService } from "../services/user.service";
 import { JWTService } from "../services/jwt.service";
-import { logger, SALT } from "../configs/app.config";
+import { logger } from "../configs/app.config";
 import { ObjectId } from "mongoose";
 import bcrypt from "bcryptjs";
 import { Request, Response } from "express";
@@ -36,14 +36,8 @@ export class UserController {
     const username = req.body.username;
     const password = req.body.password;
 
-    if (!SALT) {
-      logger.error(".ENV error SALT is unknown!");
-      res.status(500).send("Etwas ist schiefgelaufen!");
-      return;
-    }
-
     try {
-      let hash = await bcrypt.hash(password, SALT);
+      let hash = await bcrypt.hash(password, 10);
       if (hash) {
         const userID = await UserService.createUser(username, hash);
         const token = JWTService.createJWTToken(userID.toString());
@@ -62,12 +56,18 @@ export class UserController {
 
   static async getUserInformation(req: Request, res: Response) {
     const decodedJWT = res.locals.decodedJWT;
-    if (!decodedJWT) return res.status(403).redirect("/login");
+    if (!decodedJWT) {
+      res.status(403);
+      return;
+    }
 
     const userInformation = await UserService.getInformation(
       (await UserService.getId(decodedJWT as ObjectId)) as ObjectId,
     );
-    if (!userInformation) return res.status(403).redirect("/login");
+    if (!userInformation) {
+      res.status(403);
+      return;
+    }
 
     res.json({
       username: userInformation.username,

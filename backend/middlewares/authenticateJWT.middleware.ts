@@ -14,9 +14,11 @@ export const authenticateJWT = async (
       res.locals.decodedJWT = decoded;
       next();
     } else {
-      return res.status(403).redirect("/login");
+      res.status(403);
+      return;
     }
   } else {
-    return res.status(403).redirect("/login");
+    res.status(403);
+    return;
   }
 };

@@ -1,7 +1,7 @@
 import { Schema, model, Document } from "mongoose";
 import { ROLES } from "../configs/app.config";
 
-interface IUser extends Document {
+export interface IUser extends Document {
   username: string;
   password: string;
   role: string;
