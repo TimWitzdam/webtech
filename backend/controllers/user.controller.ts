@@ -15,13 +15,13 @@ export class UserController {
     );
 
     if (!user) {
-      res.status(401).send("Falsche Zugangsdaten!");
+      res.status(401).json({ error: "Falsche Zugangsdaten!" });
       return;
     }
 
     bcrypt.compare(password, user.password, (err, result) => {
       if (err || !result) {
-        res.status(401).send("Falsche Zugangsdaten!");
+        res.status(401).json({ error: "Falsche Zugangsdaten!" });
         return;
       }
 
@@ -44,12 +44,12 @@ export class UserController {
         res.json({ token });
         return;
       } else {
-        res.status(500).send("Etwas ist schiefgelaufen!");
+        res.status(500).json({ error: "Etwas ist schiefgelaufen!" });
         return;
       }
     } catch (err) {
       logger.error(`bcrypt error: ${err}`);
-      res.status(500).send("Etwas ist schiefgelaufen!");
+      res.status(500).json({ error: "Etwas ist schiefgelaufen!" });
       return;
     }
   }
@@ -57,7 +57,7 @@ export class UserController {
   static async getUserInformation(req: Request, res: Response) {
     const decodedJWT = res.locals.decodedJWT;
     if (!decodedJWT) {
-      res.status(403);
+      res.status(403).json({ error: "JWT nicht gefunden!" });
       return;
     }
 
@@ -65,7 +65,9 @@ export class UserController {
       (await UserService.getId(decodedJWT as ObjectId)) as ObjectId,
     );
     if (!userInformation) {
-      res.status(403);
+      res
+        .status(403)
+        .json({ error: "Benutzerinformationen konnten nicht geladen werden!" });
       return;
     }
 

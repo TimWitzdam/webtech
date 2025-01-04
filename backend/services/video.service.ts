@@ -20,4 +20,15 @@ export class VideoService {
       ? (saved_video._id as Schema.Types.ObjectId)
       : undefined;
   }
+
+  static async getAll() {
+    const videos = await Video.find({});
+    let video_ids: Schema.Types.ObjectId[] = [];
+
+    videos.forEach((video) => {
+      video_ids.push(video._id as Schema.Types.ObjectId);
+    });
+
+    return video_ids;
+  }
 }

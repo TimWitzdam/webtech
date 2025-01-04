@@ -14,11 +14,11 @@ export const authenticateJWT = async (
       res.locals.decodedJWT = decoded;
       next();
     } else {
-      res.status(403);
+      res.status(403).json({ error: "JWT konnte nicht verifiziert werden!" });
       return;
     }
   } else {
-    res.status(403);
+    res.status(403).json({ error: "auth_session cookie nicht gefunden!" });
     return;
   }
 };
