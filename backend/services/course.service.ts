@@ -2,6 +2,9 @@ import { ObjectId, Schema } from "mongoose";
 import Course from "../models/course.model";
 import CourseVideo from "../models/course-video.model";
 import Video from "../models/video.model";
+import User from "../models/user.model";
+import CourseUser from "../models/course-user.model";
+import { logger } from "../configs/app.config";
 
 export class CourseService {
   static async create(
@@ -47,6 +50,28 @@ export class CourseService {
     const savedCourseVideo = await courseVideo.save();
     return savedCourseVideo === courseVideo
       ? (savedCourseVideo._id as ObjectId)
+      : undefined;
+  }
+
+  static async join(
+    course_id: Schema.Types.ObjectId,
+    user_id: Schema.Types.ObjectId,
+    permission: string,
+  ): Promise<Schema.Types.ObjectId | undefined> {
+    const user = await User.findById(user_id);
+    const course = await Course.findById(course_id);
+    if (!user || !course) {
+      return undefined;
+    }
+
+    const courseUser = new CourseUser({
+      user_id,
+      course_id,
+      permission,
+    });
+    const savedCourseUser = await courseUser.save();
+    return savedCourseUser === courseUser
+      ? (savedCourseUser._id as ObjectId)
       : undefined;
   }
 }
