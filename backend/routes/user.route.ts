@@ -4,6 +4,7 @@ import { authRequest } from "../models/user.request";
 import { UserController } from "../controllers/user.controller";
 import { authenticateJWT } from "../middlewares/authenticateJWT.middleware";
 import { userWatchRequest } from "../models/user.watch.request";
+import User from "../models/user.model";
 
 const userRoutes = express.Router();
 
@@ -31,5 +32,7 @@ userRoutes.get(
   authenticateJWT,
   UserController.getUserInformation,
 );
+
+userRoutes.get("/user/lastseen", authenticateJWT, UserController.lastSeen);
 
 export default userRoutes;

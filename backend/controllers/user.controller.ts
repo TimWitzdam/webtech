@@ -97,4 +97,10 @@ export class UserController {
     res.json({ id: userWatch });
     return;
   }
+
+  static async lastSeen(req: Request, res: Response) {
+    const user_id = res.locals.decodedJWT;
+    const last_seen = await UserService.getLatestVideos(user_id);
+    res.json({ videos: last_seen });
+  }
 }

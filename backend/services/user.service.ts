@@ -2,6 +2,7 @@ import { Schema } from "mongoose";
 import User from "../models/user.model";
 import Video from "../models/video.model";
 import UserVideo from "../models/user-video.model";
+import { ILastSeenVideo } from "../types/LastSeenVideo";
 
 export class UserService {
   static async createUser(
@@ -58,5 +59,42 @@ export class UserService {
     return savedUserVideo === userVideo
       ? (savedUserVideo._id as Schema.Types.ObjectId)
       : undefined;
+  }
+
+  static async getLatestVideos(
+    user_id: Schema.Types.ObjectId,
+  ): Promise<ILastSeenVideo[] | undefined> {
+    let latestVideoDocuments = await UserVideo.find({ user_id });
+    let latestVideos: ILastSeenVideo[] = [];
+
+    if (!latestVideoDocuments) return undefined;
+
+    const videoPromises = latestVideoDocuments.map(async (userVideo) => {
+      let video = await Video.findById(userVideo.video_id);
+      if (video) {
+        let tmp = {
+          video: {
+            _id: video._id as Schema.Types.ObjectId,
+            title: video.title,
+            slug: video.slug,
+            url: video.url,
+            length: video.length,
+            creation_date: video.creation_date,
+          },
+          last_seen: userVideo.last_seen,
+          progress: userVideo.progress,
+        };
+        return tmp;
+      }
+      return null;
+    });
+
+    const videoResults = await Promise.all(videoPromises);
+
+    latestVideos = videoResults.filter(
+      (video): video is ILastSeenVideo => video !== null,
+    );
+
+    return latestVideos ? latestVideos : undefined;
   }
 }
