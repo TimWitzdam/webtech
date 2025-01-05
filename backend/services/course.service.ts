@@ -4,7 +4,6 @@ import CourseVideo from "../models/course-video.model";
 import Video from "../models/video.model";
 import User from "../models/user.model";
 import CourseUser from "../models/course-user.model";
-import { logger } from "../configs/app.config";
 
 export class CourseService {
   static async create(

@@ -3,25 +3,33 @@ import { validateSchema } from "../middlewares/validateSchema.middleware";
 import { authRequest } from "../models/user.request";
 import { UserController } from "../controllers/user.controller";
 import { authenticateJWT } from "../middlewares/authenticateJWT.middleware";
+import { userWatchRequest } from "../models/user.watch.request";
 
-const authenticationRoutes = express.Router();
+const userRoutes = express.Router();
 
-authenticationRoutes.post(
+userRoutes.post(
   "/user/login",
   validateSchema(authRequest),
   UserController.login,
 );
 
-authenticationRoutes.post(
+userRoutes.post(
   "/user/register",
   validateSchema(authRequest),
   UserController.register,
 );
 
-authenticationRoutes.get(
+userRoutes.post(
+  "/user/watch",
+  validateSchema(userWatchRequest),
+  authenticateJWT,
+  UserController.watch,
+);
+
+userRoutes.get(
   "/user/information",
   authenticateJWT,
   UserController.getUserInformation,
 );
 
-export default authenticationRoutes;
+export default userRoutes;

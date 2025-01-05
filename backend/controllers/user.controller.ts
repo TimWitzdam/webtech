@@ -76,4 +76,25 @@ export class UserController {
       role: userInformation.role,
     });
   }
+
+  static async watch(req: Request, res: Response) {
+    const user_id = res.locals.decodedJWT;
+    const { video_id, progress } = req.body;
+    if (!user_id) {
+      res.status(403).json({ error: "JWT nicht gefunden!" });
+      return;
+    }
+
+    const userWatch = await UserService.watch(video_id, user_id, progress);
+
+    if (!userWatch) {
+      res
+        .status(403)
+        .json({ error: "Fortschritt konnte nicht gespeichert werden!" });
+      return;
+    }
+
+    res.json({ id: userWatch });
+    return;
+  }
 }
