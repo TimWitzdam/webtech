@@ -8,8 +8,10 @@ import { courseJoinRequest } from "../models/course.join.request";
 
 const courseRoutes = express.Router();
 
+// Get all existing courses
 courseRoutes.get("/course/all", authenticateJWT, CourseController.getAll);
 
+// Create new course
 courseRoutes.post(
   "/course/create",
   validateSchema(courseCreateRequest),
@@ -17,6 +19,7 @@ courseRoutes.post(
   CourseController.create,
 );
 
+// Add video too course
 courseRoutes.post(
   "/course/add",
   validateSchema(courseAddRequest),
@@ -24,6 +27,7 @@ courseRoutes.post(
   CourseController.add,
 );
 
+// Add user too course
 courseRoutes.post(
   "/course/join",
   validateSchema(courseJoinRequest),

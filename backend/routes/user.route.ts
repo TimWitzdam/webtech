@@ -4,7 +4,6 @@ import { authRequest } from "../models/user.request";
 import { UserController } from "../controllers/user.controller";
 import { authenticateJWT } from "../middlewares/authenticateJWT.middleware";
 import { userWatchRequest } from "../models/user.watch.request";
-import User from "../models/user.model";
 
 const userRoutes = express.Router();
 
@@ -20,6 +19,7 @@ userRoutes.post(
   UserController.register,
 );
 
+// Mark current progress in video for user
 userRoutes.post(
   "/user/watch",
   validateSchema(userWatchRequest),
@@ -27,12 +27,14 @@ userRoutes.post(
   UserController.watch,
 );
 
+// User information e.g. (Username, Role)
 userRoutes.get(
   "/user/information",
   authenticateJWT,
   UserController.getUserInformation,
 );
 
+// Videos the user recently viewed
 userRoutes.get("/user/lastseen", authenticateJWT, UserController.lastSeen);
 
 export default userRoutes;

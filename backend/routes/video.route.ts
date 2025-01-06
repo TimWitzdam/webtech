@@ -6,8 +6,10 @@ import { VideoController } from "../controllers/video.controller";
 
 const videoRoutes = express.Router();
 
+// Get all videos existing
 videoRoutes.get("/video/all", authenticateJWT, VideoController.getAll);
 
+// Create new video
 videoRoutes.post(
   "/video/create",
   validateSchema(videoCreateRequest),

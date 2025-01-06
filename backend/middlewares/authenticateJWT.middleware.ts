@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { JWTService } from "../services/jwt.service";
 import getCookie from "../lib/cookies";
+import { ERROR_MESSAGE, logger } from "../configs/app.config";
 
 export const authenticateJWT = async (
   req: Request,
@@ -14,11 +15,13 @@ export const authenticateJWT = async (
       res.locals.decodedJWT = decoded;
       next();
     } else {
-      res.status(403).json({ error: "JWT konnte nicht verifiziert werden!" });
+      logger.error("Couldn't decode JWT Token!");
+      res.status(403).json({ error: ERROR_MESSAGE });
       return;
     }
   } else {
-    res.status(403).json({ error: "auth_session cookie nicht gefunden!" });
+    logger.warn("auth_session cookies wasn't found!");
+    res.status(400).json({ error: ERROR_MESSAGE });
     return;
   }
 };
