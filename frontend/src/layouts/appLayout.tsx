@@ -19,7 +19,14 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen relative">
-      <header className="border-b border-border-100 py-5">
+      <header
+        className="bg-white border-b border-border-100 py-5 max-w-screen-3xl mx-auto 3xl:border-x 3xl:rounded-b-xl 3xl:absolute 3xl:top-0 3xl:left-1/2 3xl:-translate-x-1/2 3xl:z-50 3xl:w-full"
+        style={{
+          borderRadius: showCoursesMenu ? "0" : undefined,
+          borderLeft: showCoursesMenu ? "1px transparent" : undefined,
+          borderRight: showCoursesMenu ? "1px transparent" : undefined,
+        }}
+      >
         <div className="flex items-center justify-between px-3">
           <div className="flex gap-8">
             <a
@@ -42,18 +49,11 @@ export default function AppLayout() {
               <div
                 className="flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
                 onClick={() => setCoursesHover(!showCoursesMenu)}
+                style={{ opacity: showCoursesMenu ? 1 : undefined }}
               >
                 <span className="font-medium text-lg">Kurse</span>
                 <SmallArrow />
               </div>
-              {showCoursesMenu && (
-                <div
-                  className="fixed inset-0 top-[88px] bg-black bg-opacity-70"
-                  onClick={handleOverlayClick}
-                >
-                  <div className="bg-white w-full p-3">COurses menu</div>
-                </div>
-              )}
             </div>
           </div>
           <div className="flex items-center gap-2 lg:gap-4">
@@ -69,7 +69,7 @@ export default function AppLayout() {
                   type="text"
                 />
               </div>
-              <div className="grid place-content-center bg-bg-100 border-r border-y border-border-100 px-4 rounded-r-full cursor-pointer">
+              <div className="grid place-content-center bg-bg-200 border-r border-y border-border-100 px-4 rounded-r-full cursor-pointer">
                 <SearchIcon />
               </div>
               <div className="border-l border-border-100 ml-4"></div>
@@ -82,9 +82,21 @@ export default function AppLayout() {
             </BaseButton>
           </div>
         </div>
-      </header>
-      <main>
-        <Outlet />
+      </header>{" "}
+      {showCoursesMenu && (
+        <div
+          className="fixed top-[88px] 3xl:top-0 inset-0 bg-black bg-opacity-70 z-40"
+          onClick={handleOverlayClick}
+        >
+          <div className="bg-white 3xl:mt-[86px] w-full p-3 max-w-screen-3xl mx-auto rounded-b-xl">
+            COurses menu
+          </div>
+        </div>
+      )}
+      <main className="3xl:pt-[88px]">
+        <div className="pb-[85px]">
+          <Outlet />
+        </div>
         <div className="md:hidden">
           <BottomNavbar />
         </div>
