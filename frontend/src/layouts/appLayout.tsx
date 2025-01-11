@@ -7,15 +7,34 @@ import BaseButton from "../components/BaseButton";
 import BottomNavbar from "../components/BottomNavbar/BottomNavbar";
 import React from "react";
 import SmallArrow from "../components/icons/SmallArrow";
+import { useEffect } from "react";
 
 export default function AppLayout() {
+  const backendURL = import.meta.env.VITE_BACKEND_URL;
   const [showCoursesMenu, setCoursesHover] = React.useState(false);
+  const [userCourses, setUserCourses] = React.useState(false);
 
   function handleOverlayClick(e: React.MouseEvent<HTMLDivElement>) {
     if (e.target === e.currentTarget) {
       setCoursesHover(false);
     }
   }
+
+  useEffect(() => {
+    fetch(`${backendURL}/api/user/courses`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include", //TODO: remove production
+    })
+      .then(async (res) => {
+        setUserCourses(await res.json());
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  }, []);
 
   return (
     <div className="min-h-screen relative">
@@ -89,7 +108,7 @@ export default function AppLayout() {
           onClick={handleOverlayClick}
         >
           <div className="bg-white 3xl:mt-[86px] w-full p-3 max-w-screen-3xl mx-auto rounded-b-xl">
-            COurses menu
+            Courses menu
           </div>
         </div>
       )}
