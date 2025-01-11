@@ -1,11 +1,12 @@
 import { Schema } from "mongoose";
 import User from "../models/user.model";
-import Video from "../models/video.model";
+import Video, { IVideo } from "../models/video.model";
 import UserVideo from "../models/user-video.model";
 import { ILastSeenVideo } from "../types/LastSeenVideo";
 import CourseUser from "../models/course-user.model";
 import Course from "../models/course.model";
 import { ICourseUserReturn } from "../types/CourseUserReturn";
+import Saved, { ISaved } from "../models/saved.model";
 
 export class UserService {
   static async createUser(
@@ -136,6 +137,42 @@ export class UserService {
 
     const result = userCourseResults.filter(
       (course): course is ICourseUserReturn => course !== null,
+    );
+
+    return result ? result : undefined;
+  }
+
+  static async saveVideo(
+    user_id: Schema.Types.ObjectId,
+    video_id: Schema.Types.ObjectId,
+  ): Promise<Schema.Types.ObjectId | undefined> {
+    const newSavedVideo = new Saved({ user_id, video_id });
+    const savedVideo = await newSavedVideo.save();
+    return savedVideo ? (savedVideo._id as Schema.Types.ObjectId) : undefined;
+  }
+
+  static async getSavedVideos(
+    user_id: Schema.Types.ObjectId,
+  ): Promise<IVideo[] | undefined> {
+    const savedVideoDocuments = await Saved.find({ user_id });
+    if (!savedVideoDocuments) return undefined;
+
+    const savedVideoPromises = savedVideoDocuments.map(async (saved) => {
+      const video = await Video.findById(saved.video_id);
+      if (!video) return null;
+      return {
+        _id: video._id,
+        title: video.title,
+        slug: video.slug,
+        url: video.url,
+        length: video.length,
+        creation_date: video.creation_date,
+      };
+    });
+
+    const savedVideoResults = await Promise.all(savedVideoPromises);
+    const result = savedVideoResults.filter(
+      (video): video is IVideo => video !== null,
     );
 
     return result ? result : undefined;

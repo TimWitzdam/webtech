@@ -102,11 +102,28 @@ export class UserController {
     const user_id = res.locals.decodedJWT;
     const last_seen = await UserService.getLatestVideos(user_id);
     res.json({ videos: last_seen });
+    return;
   }
 
   static async getCourses(req: Request, res: Response) {
     const user_id = res.locals.decodedJWT;
     const userCourses = await UserService.getUserCourses(user_id);
     res.json({ courses: userCourses });
+    return;
+  }
+
+  static async saveVideo(req: Request, res: Response) {
+    const user_id = res.locals.decodedJWT;
+    const { video_id } = req.body;
+    const savedVideo = await UserService.saveVideo(user_id, video_id);
+    res.json({ id: savedVideo });
+    return;
+  }
+
+  static async savedVideos(req: Request, res: Response) {
+    const user_id = res.locals.decodedJWT;
+    const savedVideos = await UserService.getSavedVideos(user_id);
+    res.json({ videos: savedVideos });
+    return;
   }
 }

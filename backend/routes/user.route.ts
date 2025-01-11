@@ -40,4 +40,9 @@ userRoutes.get("/user/lastseen", authenticateJWT, UserController.lastSeen);
 // Get user related courses
 userRoutes.get("/user/courses", authenticateJWT, UserController.getCourses);
 
+// Save video for user
+userRoutes.post("/user/save", authenticateJWT, UserController.saveVideo);
+
+userRoutes.get("/user/saved", authenticateJWT, UserController.savedVideos);
+
 export default userRoutes;
