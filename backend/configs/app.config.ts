@@ -10,5 +10,5 @@ export const JWT_SECRET = process.env.JWT_SECRET;
 export const MONGO_URL = process.env.MONGO_URL;
 export const ROLES = ["Student", "Professor", "Assistent", "Administrator"];
 export const ERROR_MESSAGE =
-  "Unbekannter Fehler, bitte versuche es spaeter erneut!";
+  "Unbekannter Fehler, bitte versuchen Sie es später erneut!";
 export const logger = new Logger("server");
