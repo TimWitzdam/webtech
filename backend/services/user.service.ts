@@ -3,6 +3,9 @@ import User from "../models/user.model";
 import Video from "../models/video.model";
 import UserVideo from "../models/user-video.model";
 import { ILastSeenVideo } from "../types/LastSeenVideo";
+import CourseUser from "../models/course-user.model";
+import Course from "../models/course.model";
+import { ICourseUserReturn } from "../types/CourseUserReturn";
 
 export class UserService {
   static async createUser(
@@ -96,5 +99,45 @@ export class UserService {
     );
 
     return latestVideos ? latestVideos : undefined;
+  }
+
+  static async getUserCourses(
+    user_id: Schema.Types.ObjectId,
+  ): Promise<ICourseUserReturn[] | undefined> {
+    const userCourseDocuments = await CourseUser.find({ user_id });
+
+    if (!userCourseDocuments) return undefined;
+
+    const courseDocumentPromises = userCourseDocuments.map(
+      async (courseDocuments) => {
+        if (courseDocuments) {
+          const course = await Course.findById(courseDocuments.course_id);
+          if (!course) return null;
+          const creator = await User.findById(course.creator_id);
+          if (!creator) return null;
+
+          return {
+            _id: course._id as Schema.Types.ObjectId,
+            name: course.name,
+            slug: course.slug,
+            creator: {
+              username: creator.username,
+              role: creator.role,
+            },
+            creation_date: course.creation_date,
+          };
+        }
+        return null;
+      },
+    );
+    let userCourseResults = await Promise.all(courseDocumentPromises);
+
+    if (!userCourseResults) return undefined;
+
+    const result = userCourseResults.filter(
+      (course): course is ICourseUserReturn => course !== null,
+    );
+
+    return result ? result : undefined;
   }
 }

@@ -103,4 +103,10 @@ export class UserController {
     const last_seen = await UserService.getLatestVideos(user_id);
     res.json({ videos: last_seen });
   }
+
+  static async getCourses(req: Request, res: Response) {
+    const user_id = res.locals.decodedJWT;
+    const userCourses = await UserService.getUserCourses(user_id);
+    res.json({ courses: userCourses });
+  }
 }

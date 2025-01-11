@@ -3,13 +3,21 @@ import { logger } from "./configs/app.config";
 import { PORT, MONGO_URL } from "./configs/app.config";
 import apiRouter from "./routes/index.route";
 import { connect } from "mongoose";
+import cors from "cors";
 
 logger.info("Server starting");
 
 const app = express();
 app.use(express.json());
-
 app.use("/api", apiRouter);
+
+if (process.env.NODE_ENV !== "production") {
+  app.use(
+    cors({
+      origin: ["http://localhost:5173"],
+    }),
+  );
+}
 
 async function main() {
   const connectionURL = MONGO_URL;

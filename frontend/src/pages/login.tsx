@@ -16,8 +16,9 @@ export default function Login() {
 
     const username = data.username;
     const password = data.password;
+    const backendURL = import.meta.env.VITE_BACKEND_URL;
 
-    const res = await fetch("/api/login", {
+    const res = await fetch(`${backendURL}/api/user/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

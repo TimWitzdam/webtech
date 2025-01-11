@@ -37,4 +37,7 @@ userRoutes.get(
 // Videos the user recently viewed
 userRoutes.get("/user/lastseen", authenticateJWT, UserController.lastSeen);
 
+// Get user related courses
+userRoutes.get("/user/courses", authenticateJWT, UserController.getCourses);
+
 export default userRoutes;
