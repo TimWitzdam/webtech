@@ -7,7 +7,6 @@ import CourseUser from "../models/course-user.model";
 import Course from "../models/course.model";
 import { ICourseUserReturn } from "../types/CourseUserReturn";
 import Saved from "../models/saved.model";
-import { JWTService } from "./jwt.service";
 import bcrypt from "bcryptjs";
 
 export class UserService {
@@ -180,7 +179,7 @@ export class UserService {
     return result ? result : undefined;
   }
 
-  static async resetPassword(
+  static async changePassword(
     id: Schema.Types.ObjectId,
     old_password: string,
     new_password: string,
@@ -203,5 +202,12 @@ export class UserService {
     }
 
     return true;
+  }
+
+  static async forgotPassword(
+    email: string,
+    password: string,
+  ): Promise<boolean | undefined> {
+    return;
   }
 }

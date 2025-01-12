@@ -127,7 +127,7 @@ export class UserController {
     return;
   }
 
-  static async resetPassword(req: Request, res: Response) {
+  static async changePassword(req: Request, res: Response) {
     const user_id = res.locals.decodedJWT;
     const { old_password, new_password } = req.body;
 
@@ -135,11 +135,32 @@ export class UserController {
       res.status(400).json({ status: "Fehlende Parameter!" });
     }
 
-    const result = await UserService.resetPassword(
+    const result = await UserService.changePassword(
       user_id,
       old_password,
       new_password,
     );
+
+    if (result === undefined) {
+      res.status(501).json({ status: ERROR_MESSAGE });
+      return;
+    } else if (result === false) {
+      res.status(401).json({ status: "Falsches Passwort!" });
+      return;
+    }
+
+    res.json({ status: "Passwort erfolgreich geändert!" });
+    return;
+  }
+
+  static async forgotPassword(req: Request, res: Response) {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      res.status(400).json({ status: "Fehlende Parameter!" });
+    }
+
+    const result = await UserService.forgotPassword(email, password);
 
     if (result === undefined) {
       res.status(501).json({ status: ERROR_MESSAGE });

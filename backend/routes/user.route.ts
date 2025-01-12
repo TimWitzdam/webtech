@@ -40,13 +40,18 @@ userRoutes.get("/user/lastseen", authenticateJWT, UserController.lastSeen);
 // Get user related courses
 userRoutes.get("/user/courses", authenticateJWT, UserController.getCourses);
 
-// Save video for user
+// Bookmark video for user
 userRoutes.post("/user/save", authenticateJWT, UserController.saveVideo);
 
-// Get saved user videos
+// Get bookmarked user videos
 userRoutes.get("/user/saved", authenticateJWT, UserController.savedVideos);
 
-// Reset password for user
-userRoutes.post("/user/reset", authenticateJWT, UserController.resetPassword);
+userRoutes.post(
+  "/user/change-password",
+  authenticateJWT,
+  UserController.changePassword,
+);
+
+userRoutes.post("/user/forgot-password", UserController.forgotPassword); //TODO: Decide if needed
 
 export default userRoutes;
