@@ -3,6 +3,7 @@ import HomePage from "./pages/home";
 import Login from "./pages/login";
 import AppPage from "./pages/app/app";
 import AppLayout from "./layouts/appLayout";
+import CoursesPage from "./pages/app/courses";
 
 const Router = () => {
   return (
@@ -12,6 +13,7 @@ const Router = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/app" element={<AppLayout />}>
           <Route index element={<AppPage />} />
+          <Route path="courses" element={<CoursesPage />} />
         </Route>
         <Route path="*" element={<h1>Not Found</h1>} />
       </Routes>

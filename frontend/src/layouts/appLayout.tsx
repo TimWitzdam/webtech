@@ -8,6 +8,7 @@ import BottomNavbar from "../components/BottomNavbar/BottomNavbar";
 import React from "react";
 import SmallArrow from "../components/icons/SmallArrow";
 import { useEffect } from "react";
+import HeaderLink from "../components/app/HeaderLink";
 
 export default function AppLayout() {
   const backendURL = import.meta.env.VITE_BACKEND_URL;
@@ -56,19 +57,18 @@ export default function AppLayout() {
             </a>
             <div className="hidden md:block border-r border-border-100"></div>
             <div className="hidden md:flex items-center gap-8">
-              <a href="/app" className="font-medium text-lg">
-                Startseite
-              </a>
-              <a
-                href="/app"
-                className="font-medium text-lg opacity-60 hover:opacity-100 transition-opacity"
-              >
-                Gespeichert
-              </a>
+              <HeaderLink url="/app" name="Startseite" />
+              <HeaderLink url="/app/saved" name="Gespeichert" />
               <div
                 className="flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
                 onClick={() => setCoursesHover(!showCoursesMenu)}
-                style={{ opacity: showCoursesMenu ? 1 : undefined }}
+                style={{
+                  opacity:
+                    showCoursesMenu ||
+                    window.location.pathname === "/app/courses"
+                      ? 1
+                      : undefined,
+                }}
               >
                 <span className="font-medium text-lg">Kurse</span>
                 <SmallArrow />
