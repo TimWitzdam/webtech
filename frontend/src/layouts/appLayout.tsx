@@ -12,11 +12,13 @@ import HeaderLink from "../components/app/HeaderLink";
 import XMark from "../components/icons/XMark";
 import FilledBellIcon from "../components/icons/FilledBellIcon";
 import { formatDate } from "../lib/formatDate";
+import SearchMenu from "../components/app/SearchMenu";
 
 export default function AppLayout() {
   const backendURL = import.meta.env.VITE_BACKEND_URL;
   const [showCoursesMenu, setCoursesHover] = React.useState(false);
-  const [showNotifications, setShowNotifications] = React.useState(true);
+  const [showNotifications, setShowNotifications] = React.useState(false);
+  const [showSearchResults, setShowSearchResults] = React.useState(false);
   const [userCourses, setUserCourses] = React.useState(false);
 
   function handleOverlayClick(e: React.MouseEvent<HTMLDivElement>) {
@@ -61,6 +63,78 @@ export default function AppLayout() {
     },
   ];
 
+  interface CoursesSearchResult {
+    id: number;
+    name: string;
+    link: string;
+  }
+
+  interface VideosSearchResult {
+    id: number;
+    name: string;
+    course: string;
+    link: string;
+  }
+
+  const searchResults: {
+    courses: CoursesSearchResult[];
+    videos: VideosSearchResult[];
+  } = {
+    courses: [
+      {
+        id: 1,
+        name: "Rechnernetze",
+        link: "/app/courses/rechnernetze",
+      },
+      {
+        id: 2,
+        name: "Rechnernetze",
+        link: "/app/courses/rechnernetze",
+      },
+      {
+        id: 3,
+        name: "Rechnernetze",
+        link: "/app/courses/rechnernetze",
+      },
+      {
+        id: 4,
+        name: "Rechnernetze",
+        link: "/app/courses/rechnernetze",
+      },
+      {
+        id: 5,
+        name: "Rechnernetze",
+        link: "/app/courses/rechnernetze",
+      },
+    ],
+    videos: [
+      {
+        id: 1,
+        name: "Video 1",
+        course: "Rechnernetze",
+        link: "/app/courses/rechnernetze",
+      },
+      {
+        id: 2,
+        name: "Video 1",
+        course: "Rechnernetze",
+        link: "/app/courses/rechnernetze",
+      },
+      {
+        id: 3,
+        name: "Video 1",
+        course: "Rechnernetze",
+        link: "/app/courses/rechnernetze",
+      },
+      {
+        id: 4,
+        name: "Video 1",
+        course: "Rechnernetze",
+        link: "/app/courses/rechnernetze",
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen relative">
       <header
@@ -89,7 +163,7 @@ export default function AppLayout() {
                 style={{
                   opacity:
                     showCoursesMenu ||
-                    window.location.pathname === "/app/courses"
+                      window.location.pathname === "/app/courses"
                       ? 1
                       : undefined,
                 }}
@@ -101,19 +175,40 @@ export default function AppLayout() {
           </div>
           <div className="flex items-center gap-2 lg:gap-4">
             <div className="lg:hidden">
-              <BaseButton type="rounded">
+              <BaseButton
+                type="rounded"
+                onClick={() => setShowSearchResults(true)}
+              >
                 <SearchIcon />
               </BaseButton>
+              {showSearchResults && (
+                <SearchMenu
+                  searchResults={searchResults}
+                  closeSearchMenu={() => setShowSearchResults(false)}
+                />
+              )}
             </div>
             <div className="hidden lg:flex">
-              <div className="border border-border-100 rounded-l-full focus-within:border-primary">
-                <input
-                  className="outline-none rounded-full py-2 pl-4"
-                  type="text"
-                />
-              </div>
-              <div className="grid place-content-center bg-bg-200 border-r border-y border-border-100 px-4 rounded-r-full cursor-pointer">
-                <SearchIcon />
+              <div className="lg:flex relative">
+                <div className="border border-border-100 rounded-l-full focus-within:border-primary">
+                  <input
+                    className="outline-none rounded-full py-2 pl-4"
+                    type="text"
+                    placeholder="Suche..."
+                  />
+                </div>
+                <div
+                  className="grid place-content-center bg-bg-200 border-r border-y border-border-100 px-4 rounded-r-full cursor-pointer"
+                  onClick={() => setShowSearchResults(!showSearchResults)}
+                >
+                  <SearchIcon />
+                </div>
+                {showSearchResults && (
+                  <SearchMenu
+                    searchResults={searchResults}
+                    closeSearchMenu={() => setShowSearchResults(false)}
+                  />
+                )}
               </div>
               <div className="border-l border-border-100 ml-4"></div>
             </div>

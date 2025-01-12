@@ -1,8 +1,12 @@
-export default function CoursesIcon() {
+type Props = {
+  size?: number;
+};
+
+export default function CoursesIcon({ size = 27 }: Props) {
   return (
     <svg
-      width="27"
-      height="28"
+      width={size}
+      height={size + 1}
       viewBox="0 0 27 28"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

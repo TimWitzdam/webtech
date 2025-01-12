@@ -1,8 +1,12 @@
-export default function PlayIcon() {
+type Props = {
+  size?: number;
+};
+
+export default function PlayIcon({ size = 25 }: Props) {
   return (
     <svg
-      width="25"
-      height="26"
+      width={size}
+      height={size + 1}
       viewBox="0 0 25 26"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
