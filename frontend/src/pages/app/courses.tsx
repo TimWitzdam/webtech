@@ -1,4 +1,5 @@
 import Course from "../../components/app/Course";
+import CoursesIcon from "../../components/icons/CoursesIcon";
 
 export default function CoursesPage() {
   const courses = [
@@ -32,9 +33,12 @@ export default function CoursesPage() {
   ];
 
   return (
-    <div className="px-3 mt-3 max-w-screen-3xl mx-auto 3xl:px-0">
-      <h1 className="font-medium text-3xl mb-4">Deine Kurse</h1>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <div className="max-w-screen-3xl mx-auto 3xl:px-0">
+      <div className="px-3 flex items-center gap-3 mb-4 text-primary border-b border-border-100 bg-bg-100 py-4">
+        <CoursesIcon />
+        <h1 className="font-medium text-2xl">Deine Kurse</h1>
+      </div>
+      <div className="px-3 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {courses.map((course) => (
           <Course
             key={course.id}

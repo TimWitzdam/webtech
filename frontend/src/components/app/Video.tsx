@@ -10,11 +10,12 @@ type Props = {
 
 export default function Video(props: Props) {
   return (
-    <div>
+    <a href={props.link}>
       <img
         src={props.image}
         alt={props.title}
         className="rounded-xl object-cover mb-2 w-full max-h-[220px]"
+        height={220}
       />
       <div className="flex gap-2">
         <div className="w-10 h-10 rounded-full grid place-content-center bg-bg-300">
@@ -26,6 +27,6 @@ export default function Video(props: Props) {
           <p className="text-sm">{formatDate(props.addedAt)}</p>
         </div>
       </div>
-    </div>
+    </a>
   );
 }
