@@ -9,15 +9,20 @@ import React from "react";
 import SmallArrow from "../components/icons/SmallArrow";
 import { useEffect } from "react";
 import HeaderLink from "../components/app/HeaderLink";
+import XMark from "../components/icons/XMark";
+import FilledBellIcon from "../components/icons/FilledBellIcon";
+import { formatDate } from "../lib/formatDate";
 
 export default function AppLayout() {
   const backendURL = import.meta.env.VITE_BACKEND_URL;
   const [showCoursesMenu, setCoursesHover] = React.useState(false);
+  const [showNotifications, setShowNotifications] = React.useState(true);
   const [userCourses, setUserCourses] = React.useState(false);
 
   function handleOverlayClick(e: React.MouseEvent<HTMLDivElement>) {
     if (e.target === e.currentTarget) {
       setCoursesHover(false);
+      setShowNotifications(false);
     }
   }
 
@@ -36,6 +41,25 @@ export default function AppLayout() {
         console.error(err);
       });
   }, []);
+
+  const notifications = [
+    {
+      id: 1,
+      title: "Neue Aufgabe",
+      description: "Löse die Aufgabe 2.1",
+      link: "/app/courses/rechnernetze",
+      createdAt: new Date(Date.parse("04 Jan 2025 00:12:00 GMT")),
+      read: false,
+    },
+    {
+      id: 2,
+      title: "Neue Aufgabe",
+      description: "Löse die Aufgabe 2.1",
+      link: "/app/courses/rechnernetze",
+      createdAt: new Date(Date.parse("04 Jan 2025 00:12:00 GMT")),
+      read: true,
+    },
+  ];
 
   return (
     <div className="min-h-screen relative">
@@ -93,7 +117,10 @@ export default function AppLayout() {
               </div>
               <div className="border-l border-border-100 ml-4"></div>
             </div>
-            <BaseButton type="rounded">
+            <BaseButton
+              type="rounded"
+              onClick={() => setShowNotifications(true)}
+            >
               <BellIcon />
             </BaseButton>
             <BaseButton type="rounded">
@@ -109,6 +136,46 @@ export default function AppLayout() {
         >
           <div className="bg-white 3xl:mt-[86px] w-full p-3 max-w-screen-3xl mx-auto rounded-b-xl">
             Courses menu
+          </div>
+        </div>
+      )}
+      {showNotifications && (
+        <div
+          className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 z-50"
+          onClick={handleOverlayClick}
+        >
+          <div className="bg-white md:w-1/2 lg:w-1/3 xl:w-1/4 py-3 ml-auto h-full">
+            <div className="px-3 pb-3 flex items-center justify-between border-b border-border-100">
+              <h1 className="font-medium text-xl">Benachrichtigungen</h1>
+              <BaseButton
+                type="rounded"
+                onClick={() => setShowNotifications(false)}
+                className="h-9 w-9 grid place-content-center text-primary"
+              >
+                <XMark />
+              </BaseButton>
+            </div>
+            <div className="px-3 mt-4 grid gap-5">
+              {notifications.map((notification) => (
+                <a
+                  href={notification.link}
+                  className={`flex gap-2 group ${notification.read ? "opacity-60" : ""}`}
+                >
+                  <div className="rounded-full border border-border-100 w-10 h-10 grid place-content-center text-primary">
+                    {notification.read ? <BellIcon /> : <FilledBellIcon />}
+                  </div>
+                  <div>
+                    <p className="font-medium md:text-lg group-hover:underline">
+                      {notification.title}
+                    </p>
+                    <p className="text-sm mb-2">{notification.description}</p>
+                    <p className="text-xs text-gray">
+                      {formatDate(notification.createdAt)}
+                    </p>
+                  </div>
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       )}
