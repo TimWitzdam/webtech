@@ -1,6 +1,6 @@
 import { UserService } from "../services/user.service";
 import { JWTService } from "../services/jwt.service";
-import { logger } from "../configs/app.config";
+import { ERROR_MESSAGE, logger } from "../configs/app.config";
 import { ObjectId } from "mongoose";
 import bcrypt from "bcryptjs";
 import { Request, Response } from "express";
@@ -124,6 +124,32 @@ export class UserController {
     const user_id = res.locals.decodedJWT;
     const savedVideos = await UserService.getSavedVideos(user_id);
     res.json({ videos: savedVideos });
+    return;
+  }
+
+  static async resetPassword(req: Request, res: Response) {
+    const user_id = res.locals.decodedJWT;
+    const { old_password, new_password } = req.body;
+
+    if (!old_password || !new_password) {
+      res.status(400).json({ status: "Fehlende Parameter!" });
+    }
+
+    const result = await UserService.resetPassword(
+      user_id,
+      old_password,
+      new_password,
+    );
+
+    if (result === undefined) {
+      res.status(501).json({ status: ERROR_MESSAGE });
+      return;
+    } else if (result === false) {
+      res.status(401).json({ status: "Falsches Passwort!" });
+      return;
+    }
+
+    res.json({ status: "Passwort erfolgreich geändert!" });
     return;
   }
 }

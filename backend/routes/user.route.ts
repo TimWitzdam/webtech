@@ -43,6 +43,10 @@ userRoutes.get("/user/courses", authenticateJWT, UserController.getCourses);
 // Save video for user
 userRoutes.post("/user/save", authenticateJWT, UserController.saveVideo);
 
+// Get saved user videos
 userRoutes.get("/user/saved", authenticateJWT, UserController.savedVideos);
+
+// Reset password for user
+userRoutes.post("/user/reset", authenticateJWT, UserController.resetPassword);
 
 export default userRoutes;

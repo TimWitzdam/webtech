@@ -6,7 +6,9 @@ import { ILastSeenVideo } from "../types/LastSeenVideo";
 import CourseUser from "../models/course-user.model";
 import Course from "../models/course.model";
 import { ICourseUserReturn } from "../types/CourseUserReturn";
-import Saved, { ISaved } from "../models/saved.model";
+import Saved from "../models/saved.model";
+import { JWTService } from "./jwt.service";
+import bcrypt from "bcryptjs";
 
 export class UserService {
   static async createUser(
@@ -176,5 +178,30 @@ export class UserService {
     );
 
     return result ? result : undefined;
+  }
+
+  static async resetPassword(
+    id: Schema.Types.ObjectId,
+    old_password: string,
+    new_password: string,
+  ): Promise<boolean | undefined> {
+    const user = await User.findById(id);
+    if (!user) {
+      return false;
+    }
+    const password_result = await bcrypt.compare(old_password, user.password);
+    if (!password_result) {
+      return false;
+    }
+
+    const hash = await bcrypt.hash(new_password, 10);
+    user.password = hash;
+    const result = await user.save();
+
+    if (!result) {
+      return false;
+    }
+
+    return true;
   }
 }
