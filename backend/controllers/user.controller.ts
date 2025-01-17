@@ -187,4 +187,14 @@ export class UserController {
     res.json({ status: "Passwort erfolgreich geändert!" });
     return;
   }
+
+  static async getNotifications(req: Request, res: Response) {
+    const user_id = res.locals.decodedJWT;
+    const notifications = await UserService.getNotifications(user_id);
+    if (!notifications) {
+      res.status(404).json({ status: "Keine neuen Benachrichtigungen" });
+    }
+    res.json({ notifications });
+    return;
+  }
 }

@@ -4,6 +4,7 @@ import { authRequest } from "../models/user.request";
 import { UserController } from "../controllers/user.controller";
 import { authenticateJWT } from "../middlewares/authenticateJWT.middleware";
 import { userWatchRequest } from "../models/user.watch.request";
+import { warn } from "console";
 
 const userRoutes = express.Router();
 
@@ -53,5 +54,11 @@ userRoutes.post(
 );
 
 userRoutes.post("/user/forgot-password", UserController.forgotPassword); //TODO: Decide if needed
+
+userRoutes.get(
+  "/user/notifications",
+  authenticateJWT,
+  UserController.getNotifications,
+);
 
 export default userRoutes;

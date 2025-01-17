@@ -8,6 +8,8 @@ import Course from "../models/course.model";
 import { ICourseUserReturn } from "../types/CourseUserReturn";
 import Saved from "../models/saved.model";
 import bcrypt from "bcryptjs";
+import Notification, { INotification } from "../models/notifications.model";
+import { IFormattedNotification } from "../types/FormattedNotification";
 
 export class UserService {
   static async createUser(
@@ -209,5 +211,23 @@ export class UserService {
     password: string,
   ): Promise<boolean | undefined> {
     return;
+  }
+
+  static async getNotifications(
+    user_id: Schema.Types.ObjectId,
+  ): Promise<IFormattedNotification[] | undefined> {
+    const notifications = await Notification.find({ user_id });
+    if (!notifications) return undefined;
+
+    const formatted = notifications.map((notification) => {
+      return {
+        _id: notification._id as Schema.Types.ObjectId,
+        text: notification.text,
+        date: notification.date,
+      };
+    });
+    if (!formatted) return undefined;
+
+    return formatted;
   }
 }
