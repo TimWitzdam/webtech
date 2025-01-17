@@ -1,8 +1,38 @@
 import Video from "../../components/app/Video";
 import SavedIcon from "../../components/icons/SavedIcon";
+import { useState, useEffect } from "react";
 
 export default function SavedPage() {
-  const savedVideos = [
+  const [savedVideos, setSavedVideos] = useState([]);
+  const backendURL = import.meta.env.VITE_BACKEND_URL;
+
+  useEffect(() => {
+    fetch(`${backendURL}/api/user/saved`, {
+      method: "GET",
+      credentials: "include",
+    })
+      .then(async (res) => {
+        const body = await res.json();
+        if (!body) {
+          console.error("Something wen't wrong!"); //TODO: change too toasts
+          return;
+        }
+        if (body.status) {
+          console.log(body.status);
+          return;
+        }
+        if (!body.videos) {
+          console.log("Something wen't wrong!");
+          return;
+        }
+        setSavedVideos(body.videos);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  }, []);
+
+  const temporaryVideos = [
     {
       id: 1,
       title: "Putting bits on the wire",
@@ -44,7 +74,7 @@ export default function SavedPage() {
         <h1 className="font-medium text-2xl">Gespeicherte Videos</h1>
       </div>
       <div className="px-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {savedVideos.map((video) => (
+        {temporaryVideos.map((video) => (
           <Video
             key={video.id}
             link={video.link}

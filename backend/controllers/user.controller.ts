@@ -101,6 +101,9 @@ export class UserController {
   static async lastSeen(req: Request, res: Response) {
     const user_id = res.locals.decodedJWT;
     const last_seen = await UserService.getLatestVideos(user_id);
+    if (!last_seen) {
+      res.status(404).json({ status: ERROR_MESSAGE });
+    }
     res.json({ videos: last_seen });
     return;
   }
@@ -108,6 +111,9 @@ export class UserController {
   static async getCourses(req: Request, res: Response) {
     const user_id = res.locals.decodedJWT;
     const userCourses = await UserService.getUserCourses(user_id);
+    if (!userCourses) {
+      res.status(404).json({ status: ERROR_MESSAGE });
+    }
     res.json({ courses: userCourses });
     return;
   }
@@ -116,6 +122,10 @@ export class UserController {
     const user_id = res.locals.decodedJWT;
     const { video_id } = req.body;
     const savedVideo = await UserService.saveVideo(user_id, video_id);
+    if (!savedVideo) {
+      res.status(500).json({ status: ERROR_MESSAGE });
+      return;
+    }
     res.json({ id: savedVideo });
     return;
   }
@@ -123,6 +133,10 @@ export class UserController {
   static async savedVideos(req: Request, res: Response) {
     const user_id = res.locals.decodedJWT;
     const savedVideos = await UserService.getSavedVideos(user_id);
+    if (!savedVideos) {
+      res.status(404).json({ status: ERROR_MESSAGE });
+      return;
+    }
     res.json({ videos: savedVideos });
     return;
   }
