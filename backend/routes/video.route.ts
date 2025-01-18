@@ -31,4 +31,10 @@ videoRoutes.get(
   VideoController.getComments,
 );
 
+videoRoutes.get(
+  "/video/:video_id",
+  authenticateJWT,
+  VideoController.streamVideo,
+);
+
 export default videoRoutes;

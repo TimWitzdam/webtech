@@ -1,5 +1,5 @@
-import { Schema } from "mongoose";
-import Video from "../models/video.model";
+import { isValidObjectId, Schema } from "mongoose";
+import Video, { IVideo } from "../models/video.model";
 import Comment from "../models/comment.model";
 import VideoComment from "../models/video-comment.model";
 import User from "../models/user.model";
@@ -100,5 +100,14 @@ export class VideoService {
       (comment): comment is IVideoComment => comment !== null,
     );
     return comments;
+  }
+
+  static async getInformation(video_id: string): Promise<IVideo | undefined> {
+    if (!isValidObjectId(video_id)) {
+      return undefined;
+    }
+    const video = await Video.findById(video_id);
+    if (!video) return undefined;
+    return video;
   }
 }

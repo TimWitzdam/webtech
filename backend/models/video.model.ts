@@ -1,11 +1,12 @@
 import { Schema, model, Document } from "mongoose";
 
 export interface IVideo extends Document {
-  title: string,
-  slug: string,
-  url: string,
-  length: number,
-  creation_date: Date
+  title: string;
+  slug: string;
+  url: string;
+  length: number;
+  mimeType: string;
+  creation_date: Date;
 }
 
 const videoSchema = new Schema<IVideo>({
@@ -13,7 +14,8 @@ const videoSchema = new Schema<IVideo>({
   slug: { type: String, required: true },
   url: { type: String, required: true },
   length: { type: Number, required: true },
-  creation_date: { type: Date, required: true, default: new Date() }
+  mimeType: { type: String, required: true },
+  creation_date: { type: Date, required: true, default: new Date() },
 });
 
 const Video = model<IVideo>("Video", videoSchema);

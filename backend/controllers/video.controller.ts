@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import { VideoService } from "../services/video.service";
-import { ERROR_MESSAGE } from "../configs/app.config";
+import { ERROR_MESSAGE, FILE_PATH } from "../configs/app.config";
 import { isValidObjectId } from "mongoose";
+import * as fs from "fs";
 
 export class VideoController {
   static async getAll(req: Request, res: Response) {
@@ -53,5 +54,43 @@ export class VideoController {
       res.status(404).json({ status: "Keine Kommentare gefunden!" });
     }
     res.json({ comments: result });
+  }
+
+  static async streamVideo(req: Request, res: Response) {
+    const video_id = req.params.video_id;
+    const range = req.headers.range || "1000";
+    if (!video_id || !range) {
+      res.status(400).json({ status: "Fehlende Parameter!" });
+      return;
+    }
+
+    const video = await VideoService.getInformation(video_id);
+    if (!video) {
+      res.status(404).json({ status: "Video nicht gefunden!" });
+      return;
+    }
+
+    const videoPath = `${FILE_PATH}/${video.url}`;
+    if (!fs.existsSync(videoPath)) {
+      res.status(404).json({ status: "Video nicht gefunden!" });
+      return;
+    }
+    const videoSize = fs.statSync(`${FILE_PATH}/${video.url}`).size;
+
+    const CHUNK_SIZE = 10 ** 6;
+    const start = Number(range.replace(/\D/g, ""));
+    const end = Math.min(start + CHUNK_SIZE, videoSize - 1);
+
+    const contentLength = end - start + 1;
+    const headers = {
+      "Content-Range": `bytes ${start}-${end}/${videoSize}`,
+      "Accept-Ranges": "bytes",
+      "Content-Length": contentLength,
+      "Content-Type": video.mimeType,
+    };
+
+    res.writeHead(206, headers);
+    const videoStream = fs.createReadStream(videoPath, { start, end });
+    videoStream.pipe(res);
   }
 }
