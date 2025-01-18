@@ -6,6 +6,7 @@ import AppLayout from "./layouts/appLayout";
 import CoursesPage from "./pages/app/courses";
 import SavedPage from "./pages/app/saved";
 import CoursePage from "./pages/app/course";
+import VideoPage from "./pages/app/video";
 
 const Router = () => {
   return (
@@ -18,6 +19,9 @@ const Router = () => {
           <Route path="courses">
             <Route index element={<CoursesPage />} />
             <Route path=":courseSlug" element={<CoursePage />} />
+          </Route>
+          <Route path="videos">
+            <Route path=":videoID" element={<VideoPage />} />
           </Route>
           <Route path="saved" element={<SavedPage />} />
         </Route>

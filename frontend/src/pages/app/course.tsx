@@ -28,7 +28,7 @@ export default function CoursePage() {
         duration: "12:34",
         uploaded: new Date(),
         image: "/images/video.jpg",
-        link: "/video/1",
+        link: "/app/videos/1",
       },
       {
         id: 2,
@@ -36,7 +36,7 @@ export default function CoursePage() {
         duration: "23:45",
         uploaded: new Date(),
         image: "/images/video.jpg",
-        link: "/video/2",
+        link: "/app/videos/2",
       },
       {
         id: 3,
@@ -44,7 +44,7 @@ export default function CoursePage() {
         duration: "34:56",
         uploaded: new Date(),
         image: "/images/video.jpg",
-        link: "/video/3",
+        link: "/app/videos/3",
       },
       {
         id: 4,
@@ -52,7 +52,7 @@ export default function CoursePage() {
         duration: "45:67",
         uploaded: new Date(),
         image: "/images/video.jpg",
-        link: "/video/4",
+        link: "/app/videos/4",
       },
     ],
   };
