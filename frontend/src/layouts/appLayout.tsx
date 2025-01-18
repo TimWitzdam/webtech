@@ -218,7 +218,8 @@ export default function AppLayout() {
             >
               <BellIcon />
             </BaseButton>
-            <BaseButton type="rounded">
+
+            <BaseButton type="rounded" className="text-primary">
               <UserIcon />
             </BaseButton>
           </div>

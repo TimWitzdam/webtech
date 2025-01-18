@@ -5,6 +5,7 @@ import AppPage from "./pages/app/app";
 import AppLayout from "./layouts/appLayout";
 import CoursesPage from "./pages/app/courses";
 import SavedPage from "./pages/app/saved";
+import CoursePage from "./pages/app/course";
 
 const Router = () => {
   return (
@@ -14,7 +15,10 @@ const Router = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/app" element={<AppLayout />}>
           <Route index element={<AppPage />} />
-          <Route path="courses" element={<CoursesPage />} />
+          <Route path="courses">
+            <Route index element={<CoursesPage />} />
+            <Route path=":courseSlug" element={<CoursePage />} />
+          </Route>
           <Route path="saved" element={<SavedPage />} />
         </Route>
         <Route path="*" element={<h1>Not Found</h1>} />

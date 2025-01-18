@@ -1,4 +1,5 @@
 import { formatDate } from "../../lib/formatDate";
+import ProgressBar from "./ProgressBar";
 
 type Props = {
   name: string;
@@ -26,15 +27,10 @@ export default function Course(props: Props) {
         <p className="text-gray mb-4 text-sm">
           Letze Änderung: {formatDate(props.lastChanged)}
         </p>
-        <div className="bg-border-100 rounded-full h-2 mb-2">
-          <div
-            className="bg-primary rounded-full h-2"
-            style={{
-              width: `${(props.progress.current / props.progress.total) * 100}%`,
-            }}
-          />
-        </div>
-        <div className="rounded-full border border-border-100 text-primary text-center text-sm py-1 px-3 w-fit">
+        <ProgressBar
+          progress={(props.progress.current / props.progress.total) * 100}
+        />
+        <div className="mt-2 rounded-full border border-border-100 text-primary text-center text-sm py-1 px-3 w-fit">
           <span>
             {props.progress.current}/{props.progress.total}
           </span>

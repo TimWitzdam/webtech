@@ -130,7 +130,7 @@ export default function AppPage() {
           <DashboardSection
             title="Später ansehen"
             icon={<PlayIcon />}
-            link="/#"
+            link="/app/saved"
           >
             <div className="p-3 grid grid-cols-2 gap-4 md:grid-cols-3">
               {watchLater.map((video, index) =>
