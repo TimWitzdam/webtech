@@ -64,11 +64,7 @@ export default function CoursePage() {
     <div className="max-w-screen-3xl mx-auto">
       <div className="px-3 3xl:px-0 mt-3">
         <div className="py-6 rounded-t-xl bg-bg-300 grid place-content-center md:place-content-start relative mb-8">
-          <img
-            src={course.image}
-            alt={course.name}
-            className="object-cover md:ml-6"
-          />
+          <img src={course.image} alt={course.name} className="md:ml-6" />
           <div className="absolute -bottom-7 left-0 p-4 bg-white rounded-r-2xl">
             <p className="text-4xl">{course.emoji}</p>
           </div>

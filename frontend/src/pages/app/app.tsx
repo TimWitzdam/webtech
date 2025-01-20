@@ -94,6 +94,7 @@ export default function AppPage() {
                 title="Putting bits on the wire"
                 course={{ name: "Rechnernetze", emoji: "🌐" }}
                 addedAt={new Date(Date.parse("04 Jan 2025 00:12:00 GMT"))}
+                duration="12:34"
               />
             </div>
           </DashboardSection>

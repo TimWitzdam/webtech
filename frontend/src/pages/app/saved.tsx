@@ -40,6 +40,7 @@ export default function SavedPage() {
       image: "/images/video.jpg",
       link: "/app/courses/rechnernetze",
       addedAt: new Date(Date.parse("04 Jan 2025 00:12:00 GMT")),
+      duration: "12:34",
     },
     {
       id: 2,
@@ -48,6 +49,7 @@ export default function SavedPage() {
       image: "/images/video.jpg",
       link: "/app/courses/rechnernetze",
       addedAt: new Date(Date.parse("04 Jan 2025 00:12:00 GMT")),
+      duration: "12:34",
     },
     {
       id: 3,
@@ -56,6 +58,7 @@ export default function SavedPage() {
       image: "/images/video.jpg",
       link: "/app/courses/rechnernetze",
       addedAt: new Date(Date.parse("04 Jan 2025 00:12:00 GMT")),
+      duration: "12:34",
     },
     {
       id: 4,
@@ -64,6 +67,7 @@ export default function SavedPage() {
       image: "/images/video.jpg",
       link: "/app/courses/rechnernetze",
       addedAt: new Date(Date.parse("04 Jan 2025 00:12:00 GMT")),
+      duration: "12:34",
     },
   ];
 
@@ -82,6 +86,7 @@ export default function SavedPage() {
             title={video.title}
             course={video.course}
             addedAt={video.addedAt}
+            duration={video.duration}
           />
         ))}
       </div>
