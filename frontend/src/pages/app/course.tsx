@@ -7,6 +7,7 @@ import LanguageIcon from "../../components/icons/LanguageIcon";
 import ProgressBar from "../../components/app/ProgressBar";
 import { useState } from "react";
 import Video from "../../components/app/Video";
+import ProgressIcon from "../../components/icons/ProgressIcon";
 
 export default function CoursePage() {
   const { courseSlug } = useParams();
@@ -87,7 +88,7 @@ export default function CoursePage() {
               name="Sprache"
               value={course.languages}
             />
-            <CourseProperty icon={<LanguageIcon />} name="Fortschritt">
+            <CourseProperty icon={<ProgressIcon />} name="Fortschritt">
               <div className="flex items-center gap-2">
                 <span>
                   {course.progress.current}/{course.progress.total}
