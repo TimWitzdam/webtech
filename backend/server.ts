@@ -8,16 +8,16 @@ import cors from "cors";
 logger.info("Server starting");
 
 const app = express();
-app.use(express.json());
-app.use("/api", apiRouter);
-
 if (process.env.NODE_ENV !== "production") {
   app.use(
     cors({
       origin: ["http://localhost:5173"],
+      credentials: true,
     }),
   );
 }
+app.use(express.json());
+app.use("/api", apiRouter);
 
 async function main() {
   const connectionURL = MONGO_URL;

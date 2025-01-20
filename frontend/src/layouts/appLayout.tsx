@@ -6,8 +6,6 @@ import { config } from "../config";
 import BaseButton from "../components/BaseButton";
 import BottomNavbar from "../components/BottomNavbar/BottomNavbar";
 import React from "react";
-import SmallArrow from "../components/icons/SmallArrow";
-import { useEffect } from "react";
 import HeaderLink from "../components/app/HeaderLink";
 import XMark from "../components/icons/XMark";
 import FilledBellIcon from "../components/icons/FilledBellIcon";
@@ -15,34 +13,14 @@ import { formatDate } from "../lib/formatDate";
 import SearchMenu from "../components/app/SearchMenu";
 
 export default function AppLayout() {
-  const backendURL = import.meta.env.VITE_BACKEND_URL;
-  const [showCoursesMenu, setCoursesHover] = React.useState(false);
   const [showNotifications, setShowNotifications] = React.useState(false);
   const [showSearchResults, setShowSearchResults] = React.useState(false);
-  const [userCourses, setUserCourses] = React.useState(false);
 
   function handleOverlayClick(e: React.MouseEvent<HTMLDivElement>) {
     if (e.target === e.currentTarget) {
-      setCoursesHover(false);
       setShowNotifications(false);
     }
   }
-
-  useEffect(() => {
-    fetch(`${backendURL}/api/user/courses`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include", //TODO: remove production
-    })
-      .then(async (res) => {
-        setUserCourses(await res.json());
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  }, []);
 
   const notifications = [
     {
@@ -137,14 +115,7 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen relative">
-      <header
-        className="bg-white border-b border-border-100 py-5 max-w-screen-3xl mx-auto 3xl:border-x 3xl:rounded-b-xl 3xl:absolute 3xl:top-0 3xl:left-1/2 3xl:-translate-x-1/2 3xl:z-50 3xl:w-full"
-        style={{
-          borderRadius: showCoursesMenu ? "0" : undefined,
-          borderLeft: showCoursesMenu ? "1px transparent" : undefined,
-          borderRight: showCoursesMenu ? "1px transparent" : undefined,
-        }}
-      >
+      <header className="bg-white border-b border-border-100 py-5 max-w-screen-3xl mx-auto 3xl:border-x 3xl:rounded-b-xl 3xl:absolute 3xl:top-0 3xl:left-1/2 3xl:-translate-x-1/2 3xl:z-50 3xl:w-full">
         <div className="flex items-center justify-between px-3">
           <div className="flex gap-8">
             <a
@@ -157,20 +128,7 @@ export default function AppLayout() {
             <div className="hidden md:flex items-center gap-8">
               <HeaderLink url="/app" name="Startseite" />
               <HeaderLink url="/app/saved" name="Gespeichert" />
-              <div
-                className="flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
-                onClick={() => setCoursesHover(!showCoursesMenu)}
-                style={{
-                  opacity:
-                    showCoursesMenu ||
-                      window.location.pathname === "/app/courses"
-                      ? 1
-                      : undefined,
-                }}
-              >
-                <span className="font-medium text-lg">Kurse</span>
-                <SmallArrow />
-              </div>
+              <HeaderLink url="/app/courses" name="Kurse" />
             </div>
           </div>
           <div className="flex items-center gap-2 lg:gap-4">
@@ -224,17 +182,7 @@ export default function AppLayout() {
             </BaseButton>
           </div>
         </div>
-      </header>{" "}
-      {showCoursesMenu && (
-        <div
-          className="fixed top-[88px] 3xl:top-0 inset-0 bg-black bg-opacity-70 z-40"
-          onClick={handleOverlayClick}
-        >
-          <div className="bg-white 3xl:mt-[86px] w-full p-3 max-w-screen-3xl mx-auto rounded-b-xl">
-            Courses menu
-          </div>
-        </div>
-      )}
+      </header>
       {showNotifications && (
         <div
           className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 z-50"

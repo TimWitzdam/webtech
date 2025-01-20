@@ -1,11 +1,29 @@
+import { useEffect, useState } from "react";
 import Course from "../../components/app/Course";
 import DashboardSection from "../../components/app/DashboardSection";
 import SmallVideo from "../../components/app/SmallVideo";
 import Video from "../../components/app/Video";
 import CalendarIcon from "../../components/icons/CalendarIcon";
 import PlayIcon from "../../components/icons/PlayIcon";
+import request from "../../lib/request";
 
 export default function AppPage() {
+  const [userCourses, setUserCourses] = useState(false);
+
+  useEffect(() => {
+    async function fetchData() {
+      const res = await request("api/user/courses");
+
+      if (res.error) {
+        console.error(res.error);
+      } else {
+        setUserCourses(res.courses);
+      }
+    }
+
+    fetchData();
+  }, []);
+
   const continueWatching = [
     {
       id: 1,
