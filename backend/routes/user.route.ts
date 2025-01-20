@@ -4,7 +4,6 @@ import { authRequest } from "../models/user.request";
 import { UserController } from "../controllers/user.controller";
 import { authenticateJWT } from "../middlewares/authenticateJWT.middleware";
 import { userWatchRequest } from "../models/user.watch.request";
-import { warn } from "console";
 
 const userRoutes = express.Router();
 
@@ -60,5 +59,7 @@ userRoutes.get(
   authenticateJWT,
   UserController.getNotifications,
 );
+
+userRoutes.get("/user/search", authenticateJWT, UserController.search);
 
 export default userRoutes;

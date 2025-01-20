@@ -4,18 +4,16 @@ import Comment from "../models/comment.model";
 import VideoComment from "../models/video-comment.model";
 import User from "../models/user.model";
 import { IVideoComment } from "../types/VideoComment";
+import { UserService } from "./user.service";
+import { IVideoFind } from "../types/VideoFind";
 
 export class VideoService {
   static async create(
     title: string,
-    slug: string,
-    url: string,
     length: number,
   ): Promise<Schema.Types.ObjectId | undefined> {
     const video = new Video({
       title,
-      slug,
-      url,
       length,
       creation_date: new Date(),
     });
@@ -23,17 +21,6 @@ export class VideoService {
     return saved_video === video
       ? (saved_video._id as Schema.Types.ObjectId)
       : undefined;
-  }
-
-  static async getAll() {
-    const videos = await Video.find({});
-    let video_ids: Schema.Types.ObjectId[] = [];
-
-    videos.forEach((video) => {
-      video_ids.push(video._id as Schema.Types.ObjectId);
-    });
-
-    return video_ids;
   }
 
   /* TODO:
@@ -66,13 +53,6 @@ export class VideoService {
       : undefined;
   }
 
-  /*
-   * username
-   * role
-   * text
-   * timestamp
-   *
-   */
   static async getComments(
     video_id: string,
   ): Promise<IVideoComment[] | undefined> {
@@ -109,5 +89,30 @@ export class VideoService {
     const video = await Video.findById(video_id);
     if (!video) return undefined;
     return video;
+  }
+
+  static async find(name: string): Promise<IVideoFind[] | undefined> {
+    const regex = new RegExp(`${name}`, "i");
+    const videos = await Video.find({ title: regex });
+    const videoPromises = videos.map(async (video) => {
+      const creator = await UserService.getInformation(video.uploaderId);
+      if (!creator) return undefined;
+      return {
+        _id: video._id,
+        title: video.title,
+        length: video.length,
+        uploader: {
+          username: creator.username,
+          role: creator.role,
+        },
+        creation_date: video.creation_date,
+      };
+    });
+    const resolvedVideos = await Promise.all(videoPromises);
+    const videoResults = resolvedVideos.filter(
+      (videos): videos is IVideoFind => videos !== null,
+    );
+    if (!videoResults) return undefined;
+    return videoResults;
   }
 }

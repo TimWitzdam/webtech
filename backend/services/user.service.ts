@@ -83,8 +83,6 @@ export class UserService {
           video: {
             _id: video._id as Schema.Types.ObjectId,
             title: video.title,
-            slug: video.slug,
-            url: video.url,
             length: video.length,
             creation_date: video.creation_date,
           },
@@ -166,8 +164,6 @@ export class UserService {
       return {
         _id: video._id,
         title: video.title,
-        slug: video.slug,
-        url: video.url,
         length: video.length,
         creation_date: video.creation_date,
       };

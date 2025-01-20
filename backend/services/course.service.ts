@@ -1,9 +1,11 @@
 import { ObjectId, Schema } from "mongoose";
-import Course from "../models/course.model";
+import Course, { ICourse } from "../models/course.model";
 import CourseVideo from "../models/course-video.model";
 import Video from "../models/video.model";
 import User from "../models/user.model";
 import CourseUser from "../models/course-user.model";
+import { ICourseFind } from "../types/CourseFind";
+import { UserService } from "./user.service";
 
 export class CourseService {
   static async create(
@@ -72,5 +74,30 @@ export class CourseService {
     return savedCourseUser === courseUser
       ? (savedCourseUser._id as ObjectId)
       : undefined;
+  }
+
+  static async find(name: string): Promise<ICourseFind[] | undefined> {
+    const regex = new RegExp(`${name}`, "i");
+    const course = await Course.find({ name: regex });
+    if (!course) return undefined;
+    const coursePromises = course.map(async (course) => {
+      const creator = await UserService.getInformation(course.creator_id);
+      if (!creator) return undefined;
+      return {
+        _id: course._id,
+        name: course.name,
+        slug: course.slug,
+        creator: {
+          name: creator.username,
+          role: creator.role,
+        },
+        creation_date: course.creation_date,
+      };
+    });
+    const courseResolve = await Promise.all(coursePromises);
+    const courseResults = courseResolve.filter(
+      (course): course is ICourseFind => course !== null,
+    );
+    return courseResults;
   }
 }

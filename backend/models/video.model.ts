@@ -2,20 +2,16 @@ import { Schema, model, Document } from "mongoose";
 
 export interface IVideo extends Document {
   title: string;
-  slug: string;
-  url: string;
   length: number;
-  mimeType: string;
+  uploaderId: Schema.Types.ObjectId;
   creation_date: Date;
 }
 
 const videoSchema = new Schema<IVideo>({
   title: { type: String, required: true },
-  slug: { type: String, required: true },
-  url: { type: String, required: true },
   length: { type: Number, required: true },
-  mimeType: { type: String, required: true },
   creation_date: { type: Date, required: true, default: new Date() },
+  uploaderId: { type: Schema.Types.ObjectId, required: true },
 });
 
 const Video = model<IVideo>("Video", videoSchema);

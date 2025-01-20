@@ -4,6 +4,8 @@ import { ERROR_MESSAGE, logger } from "../configs/app.config";
 import { ObjectId } from "mongoose";
 import bcrypt from "bcryptjs";
 import { Request, Response } from "express";
+import { VideoService } from "../services/video.service";
+import { CourseService } from "../services/course.service";
 
 export class UserController {
   static async login(req: Request, res: Response) {
@@ -195,6 +197,22 @@ export class UserController {
       res.status(404).json({ status: "Keine neuen Benachrichtigungen" });
     }
     res.json({ notifications });
+    return;
+  }
+
+  static async search(req: Request, res: Response) {
+    const { search } = req.query;
+    if (!search) {
+      res.status(400).json({ status: "Kein Suchfilter vorhanden!" });
+      return;
+    }
+    const videos = await VideoService.find(search.toString());
+    const courses = await CourseService.find(search.toString());
+    if (!videos || !courses) {
+      res.status(404).json({ status: ERROR_MESSAGE });
+      return;
+    }
+    res.json({ courses, videos });
     return;
   }
 }

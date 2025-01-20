@@ -7,9 +7,6 @@ import { videoCommentRequest } from "../models/video.comment.request";
 
 const videoRoutes = express.Router();
 
-// Get all videos existing
-videoRoutes.get("/video/all", authenticateJWT, VideoController.getAll);
-
 // Create new video
 videoRoutes.post(
   "/video/create",

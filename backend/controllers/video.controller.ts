@@ -3,21 +3,17 @@ import { VideoService } from "../services/video.service";
 import { ERROR_MESSAGE, FILE_PATH } from "../configs/app.config";
 import { isValidObjectId } from "mongoose";
 import * as fs from "fs";
+import mime from "mime";
 
 export class VideoController {
-  static async getAll(req: Request, res: Response) {
-    const videos = await VideoService.getAll();
-    res.json({ videos });
-    return;
-  }
-
+  // Add video storing
   static async create(req: Request, res: Response) {
-    const { title, slug, url, length } = req.body;
+    const { title, length } = req.body;
     if (typeof length !== "number") {
       res.status(400).json({ error: "Die länge des Videos ist keine Zahl" });
       return;
     }
-    const video_id = await VideoService.create(title, slug, url, length);
+    const video_id = await VideoService.create(title, length);
     if (!video_id) {
       res.status(500).json({ error: "Video konnte nicht erstellt werden!" });
       return;
@@ -70,12 +66,13 @@ export class VideoController {
       return;
     }
 
-    const videoPath = `${FILE_PATH}/${video.url}`;
+    const videoPath = `${FILE_PATH}/videos/${video._id}`;
     if (!fs.existsSync(videoPath)) {
       res.status(404).json({ status: "Video nicht gefunden!" });
       return;
     }
-    const videoSize = fs.statSync(`${FILE_PATH}/${video.url}`).size;
+    let mimeType = mime.getType(videoPath) || "video/mp4";
+    const videoSize = fs.statSync(`${FILE_PATH}/videos/${video._id}`).size;
 
     const CHUNK_SIZE = 10 ** 6;
     const start = Number(range.replace(/\D/g, ""));
@@ -86,7 +83,7 @@ export class VideoController {
       "Content-Range": `bytes ${start}-${end}/${videoSize}`,
       "Accept-Ranges": "bytes",
       "Content-Length": contentLength,
-      "Content-Type": video.mimeType,
+      "Content-Type": mimeType,
     };
 
     res.writeHead(206, headers);
