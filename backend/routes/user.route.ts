@@ -34,6 +34,9 @@ userRoutes.get(
   UserController.getUserInformation,
 );
 
+// Sets video as seen
+userRoutes.post("/user/seen", authenticateJWT, UserController.seen);
+
 // Videos the user recently viewed
 userRoutes.get("/user/lastseen", authenticateJWT, UserController.lastSeen);
 

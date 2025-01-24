@@ -56,14 +56,14 @@ export class UserService {
       return undefined;
     }
 
-    const userVideo = new UserVideo({
+    const userVideoList = new UserVideo({
       video_id,
       user_id,
       progress,
       last_seen: new Date(),
     });
-    const savedUserVideo = await userVideo.save();
-    return savedUserVideo === userVideo
+    const savedUserVideo = await userVideoList.save();
+    return savedUserVideo === userVideoList
       ? (savedUserVideo._id as Schema.Types.ObjectId)
       : undefined;
   }
@@ -76,8 +76,8 @@ export class UserService {
 
     if (!latestVideoDocuments) return undefined;
 
-    const videoPromises = latestVideoDocuments.map(async (userVideo) => {
-      let video = await Video.findById(userVideo.video_id);
+    const videoPromises = latestVideoDocuments.map(async (userVideoList) => {
+      let video = await Video.findById(userVideoList.video_id);
       if (video) {
         let tmp = {
           video: {
@@ -86,8 +86,8 @@ export class UserService {
             length: video.length,
             creation_date: video.creation_date,
           },
-          last_seen: userVideo.last_seen,
-          progress: userVideo.progress,
+          last_seen: userVideoList.last_seen,
+          progress: userVideoList.progress,
         };
         return tmp;
       }
@@ -225,5 +225,30 @@ export class UserService {
     if (!formatted) return undefined;
 
     return formatted;
+  }
+
+  static async markAsSeen(
+    user_id: Schema.Types.ObjectId,
+    video_id: Schema.Types.ObjectId,
+  ): Promise<Schema.Types.ObjectId | undefined> {
+    const userVideoList = await UserVideo.find({
+      $and: [{ user_id: user_id }, { video_id: video_id }],
+    });
+
+    if (!userVideoList) {
+      return undefined;
+    }
+    if (userVideoList.length > 1 || userVideoList.length === 0) {
+      return undefined;
+    }
+
+    const userVideo = userVideoList[0];
+    userVideo.seen = true;
+    const result = await userVideo.save();
+    if (!result) {
+      return undefined;
+    }
+
+    return result._id as Schema.Types.ObjectId;
   }
 }

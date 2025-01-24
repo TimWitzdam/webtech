@@ -1,7 +1,7 @@
 import { UserService } from "../services/user.service";
 import { JWTService } from "../services/jwt.service";
 import { ERROR_MESSAGE, logger } from "../configs/app.config";
-import { ObjectId } from "mongoose";
+import { isValidObjectId, ObjectId } from "mongoose";
 import bcrypt from "bcryptjs";
 import { Request, Response } from "express";
 import { VideoService } from "../services/video.service";
@@ -213,6 +213,22 @@ export class UserController {
       return;
     }
     res.json({ courses, videos });
+    return;
+  }
+
+  static async seen(req: Request, res: Response) {
+    const user_id = res.locals.decodedJWT;
+    const { video_id } = req.body;
+    if (!isValidObjectId(video_id) || !isValidObjectId(user_id)) {
+      res.status(400).json({ status: ERROR_MESSAGE });
+      return;
+    }
+    const response = await UserService.markAsSeen(user_id, video_id);
+    if (!response) {
+      res.status(500).json({ status: ERROR_MESSAGE });
+      return;
+    }
+    res.json({ status: response });
     return;
   }
 }
