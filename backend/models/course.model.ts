@@ -9,7 +9,7 @@ export interface ICourse extends Document {
 
 const courseSchema = new Schema<ICourse>({
   name: { type: String, required: true },
-  slug: { type: String, required: true },
+  slug: { type: String, required: true, unique: true },
   creator_id: { type: Schema.Types.ObjectId, required: true },
   creation_date: { type: Date, required: true, default: new Date() },
 });

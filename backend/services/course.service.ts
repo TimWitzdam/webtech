@@ -100,4 +100,36 @@ export class CourseService {
     );
     return courseResults;
   }
+
+  static async findBySlug(slug: string): Promise<ICourseFind | undefined> {
+    const regex = new RegExp(`${slug}`, "i");
+    const course = await Course.find({ slug: regex });
+    if (!course) return undefined;
+    const coursePromises = course.map(async (course) => {
+      const creator = await UserService.getInformation(course.creator_id);
+      if (!creator) return undefined;
+      return {
+        _id: course._id,
+        name: course.name,
+        slug: course.slug,
+        creator: {
+          name: creator.username,
+          role: creator.role,
+        },
+        creation_date: course.creation_date,
+      };
+    });
+    const courseResolve = await Promise.all(coursePromises);
+    const courseResults = courseResolve.filter(
+      (course): course is ICourseFind => course !== null,
+    );
+    if (
+      !courseResults ||
+      courseResults.length > 1 ||
+      courseResults.length === 0
+    ) {
+      return undefined;
+    }
+    return courseResults[0];
+  }
 }

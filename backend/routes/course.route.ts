@@ -35,4 +35,6 @@ courseRoutes.post(
   CourseController.join,
 );
 
+courseRoutes.get("/course/:slug", authenticateJWT, CourseController.findBySlug);
+
 export default courseRoutes;

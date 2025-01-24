@@ -65,4 +65,11 @@ export class CourseController {
     res.json({ id: newCourseUser });
     return;
   }
+
+  static async findBySlug(req: Request, res: Response) {
+    const slug = req.params.slug;
+    const course = await CourseService.findBySlug(slug);
+    res.json({ courses: course });
+    return;
+  }
 }
