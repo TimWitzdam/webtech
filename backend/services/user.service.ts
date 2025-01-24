@@ -56,10 +56,29 @@ export class UserService {
       return undefined;
     }
 
+    const userVideo = await UserVideo.find({ video_id, user_id });
+    if (!userVideo || userVideo.length > 1) {
+      return undefined;
+    }
+
+    if (userVideo.length > 0) {
+      if (progress < video.length) {
+        userVideo[0].progress = progress;
+      } else {
+        progress = video.length;
+      }
+      const result = await userVideo[0].save();
+      if (!result) {
+        return undefined;
+      }
+      return result._id as Schema.Types.ObjectId;
+    }
+
+    const formatProgress = progress < video.length ? progress : video.length;
     const userVideoList = new UserVideo({
       video_id,
       user_id,
-      progress,
+      progress: formatProgress,
       last_seen: new Date(),
     });
     const savedUserVideo = await userVideoList.save();
@@ -71,7 +90,7 @@ export class UserService {
   static async getLatestVideos(
     user_id: Schema.Types.ObjectId,
   ): Promise<ILastSeenVideo[] | undefined> {
-    let latestVideoDocuments = await UserVideo.find({ user_id });
+    let latestVideoDocuments = await UserVideo.find({ user_id, seen: false });
     let latestVideos: ILastSeenVideo[] = [];
 
     if (!latestVideoDocuments) return undefined;

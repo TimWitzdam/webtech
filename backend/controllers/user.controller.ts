@@ -41,8 +41,8 @@ export class UserController {
     try {
       let hash = await bcrypt.hash(password, 10);
       if (hash) {
-        const userID = await UserService.createUser(username, hash);
-        const token = JWTService.createJWTToken(userID.toString());
+        const userId = await UserService.createUser(username, hash);
+        const token = JWTService.createJWTToken(userId.toString());
         res.json({ token });
         return;
       } else {
@@ -59,7 +59,7 @@ export class UserController {
   static async getUserInformation(req: Request, res: Response) {
     const decodedJWT = res.locals.decodedJWT;
     if (!decodedJWT) {
-      res.status(403).json({ error: "JWT nicht gefunden!" });
+      res.status(400).json({ error: "JWT nicht gefunden!" });
       return;
     }
 
@@ -68,7 +68,7 @@ export class UserController {
     );
     if (!userInformation) {
       res
-        .status(403)
+        .status(500)
         .json({ error: "Benutzerinformationen konnten nicht geladen werden!" });
       return;
     }
@@ -80,19 +80,19 @@ export class UserController {
   }
 
   static async watch(req: Request, res: Response) {
-    const user_id = res.locals.decodedJWT;
-    const { video_id, progress } = req.body;
-    if (!user_id) {
-      res.status(403).json({ error: "JWT nicht gefunden!" });
+    const userId = res.locals.decodedJWT;
+    const { videoId, progress } = req.body;
+    if (!userId) {
+      res.status(400).json({ status: "JWT nicht gefunden!" });
       return;
     }
 
-    const userWatch = await UserService.watch(video_id, user_id, progress);
+    const userWatch = await UserService.watch(videoId, userId, progress);
 
     if (!userWatch) {
       res
-        .status(403)
-        .json({ error: "Fortschritt konnte nicht gespeichert werden!" });
+        .status(500)
+        .json({ status: "Fortschritt konnte nicht gespeichert werden!" });
       return;
     }
 
@@ -101,18 +101,18 @@ export class UserController {
   }
 
   static async lastSeen(req: Request, res: Response) {
-    const user_id = res.locals.decodedJWT;
-    const last_seen = await UserService.getLatestVideos(user_id);
-    if (!last_seen) {
+    const userId = res.locals.decodedJWT;
+    const lastSeen = await UserService.getLatestVideos(userId);
+    if (!lastSeen) {
       res.status(404).json({ status: ERROR_MESSAGE });
     }
-    res.json({ videos: last_seen });
+    res.json({ videos: lastSeen });
     return;
   }
 
   static async getCourses(req: Request, res: Response) {
-    const user_id = res.locals.decodedJWT;
-    const userCourses = await UserService.getUserCourses(user_id);
+    const userId = res.locals.decodedJWT;
+    const userCourses = await UserService.getUserCourses(userId);
     if (!userCourses) {
       res.status(404).json({ status: ERROR_MESSAGE });
     }
@@ -121,9 +121,9 @@ export class UserController {
   }
 
   static async saveVideo(req: Request, res: Response) {
-    const user_id = res.locals.decodedJWT;
-    const { video_id } = req.body;
-    const savedVideo = await UserService.saveVideo(user_id, video_id);
+    const userId = res.locals.decodedJWT;
+    const { videoId } = req.body;
+    const savedVideo = await UserService.saveVideo(userId, videoId);
     if (!savedVideo) {
       res.status(500).json({ status: ERROR_MESSAGE });
       return;
@@ -133,8 +133,8 @@ export class UserController {
   }
 
   static async savedVideos(req: Request, res: Response) {
-    const user_id = res.locals.decodedJWT;
-    const savedVideos = await UserService.getSavedVideos(user_id);
+    const userId = res.locals.decodedJWT;
+    const savedVideos = await UserService.getSavedVideos(userId);
     if (!savedVideos) {
       res.status(404).json({ status: ERROR_MESSAGE });
       return;
@@ -144,7 +144,7 @@ export class UserController {
   }
 
   static async changePassword(req: Request, res: Response) {
-    const user_id = res.locals.decodedJWT;
+    const userId = res.locals.decodedJWT;
     const { old_password, new_password } = req.body;
 
     if (!old_password || !new_password) {
@@ -152,7 +152,7 @@ export class UserController {
     }
 
     const result = await UserService.changePassword(
-      user_id,
+      userId,
       old_password,
       new_password,
     );
@@ -191,8 +191,8 @@ export class UserController {
   }
 
   static async getNotifications(req: Request, res: Response) {
-    const user_id = res.locals.decodedJWT;
-    const notifications = await UserService.getNotifications(user_id);
+    const userId = res.locals.decodedJWT;
+    const notifications = await UserService.getNotifications(userId);
     if (!notifications) {
       res.status(404).json({ status: "Keine neuen Benachrichtigungen" });
     }
@@ -217,13 +217,13 @@ export class UserController {
   }
 
   static async seen(req: Request, res: Response) {
-    const user_id = res.locals.decodedJWT;
-    const { video_id } = req.body;
-    if (!isValidObjectId(video_id) || !isValidObjectId(user_id)) {
+    const userId = res.locals.decodedJWT;
+    const { videoId } = req.body;
+    if (!isValidObjectId(videoId) || !isValidObjectId(userId)) {
       res.status(400).json({ status: ERROR_MESSAGE });
       return;
     }
-    const response = await UserService.markAsSeen(user_id, video_id);
+    const response = await UserService.markAsSeen(userId, videoId);
     if (!response) {
       res.status(500).json({ status: ERROR_MESSAGE });
       return;
@@ -233,13 +233,13 @@ export class UserController {
   }
 
   static async getSeen(req: Request, res: Response) {
-    const user_id = res.locals.decodedJWT;
-    const video_id = req.params.video_id;
-    if (!isValidObjectId(video_id) || !isValidObjectId(user_id)) {
+    const userId = res.locals.decodedJWT;
+    const videoId = req.params.videoId;
+    if (!isValidObjectId(videoId) || !isValidObjectId(userId)) {
       res.status(400).json({ status: ERROR_MESSAGE });
       return;
     }
-    const response = await UserService.checkIfSeen(user_id, video_id);
+    const response = await UserService.checkIfSeen(userId, videoId);
     if (!response) {
       res.status(500).json({ status: ERROR_MESSAGE });
       return;
