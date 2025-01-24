@@ -218,8 +218,11 @@ export class UserService {
     const formatted = notifications.map((notification) => {
       return {
         _id: notification._id as Schema.Types.ObjectId,
+        title: notification.title,
         text: notification.text,
-        date: notification.date,
+        link: notification.link,
+        createdAt: notification.createdAt,
+        read: notification.read,
       };
     });
     if (!formatted) return undefined;
