@@ -9,6 +9,7 @@ import { IVideoFind } from "../types/VideoFind";
 import Course, { ICourse } from "../models/course.model";
 import CourseVideo from "../models/course-video.model";
 import { ICourseInformation } from "../types/CourseInformation";
+import { IFormattedComment } from "../types/FormattedComment";
 
 export class VideoService {
   static async create(
@@ -58,7 +59,7 @@ export class VideoService {
 
   static async getComments(
     videoId: string,
-  ): Promise<IVideoComment[] | undefined> {
+  ): Promise<IFormattedComment[] | undefined> {
     const videoComments = await VideoComment.find({ videoId });
     if (!videoComments) return undefined;
 
@@ -67,21 +68,19 @@ export class VideoService {
       let user = await User.findById(videoComment.userId);
       if (!comment || !user) return undefined;
       return {
-        user: {
-          username: user.username,
-          role: user.role,
-        },
-        comment: {
-          text: comment.text,
-          timestamp: comment.timestamp,
-        },
+        username: user.username,
+        role: user.role,
+        text: comment.text,
+        createdAt: comment.createdAt,
+        likes: comment.likes,
       };
     });
 
     const resolvedPromises = await Promise.all(commentPromises);
     const comments = resolvedPromises.filter(
-      (comment): comment is IVideoComment => comment !== null,
+      (comment): comment is IFormattedComment => comment !== null,
     );
+    if (!comments) return undefined;
     return comments;
   }
 

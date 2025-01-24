@@ -23,13 +23,13 @@ videoRoutes.post(
 );
 
 videoRoutes.get(
-  "/video/comments/:video_id",
+  "/video/comments/:videoId",
   authenticateJWT,
   VideoController.getComments,
 );
 
 videoRoutes.get(
-  "/video/stream/:video_id",
+  "/video/stream/:videoId",
   authenticateJWT,
   VideoController.streamVideo,
 );
