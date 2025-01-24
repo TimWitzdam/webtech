@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
 import { CourseService } from "../services/course.service";
 import { isValidObjectId } from "mongoose";
-import { ROLES } from "../configs/app.config";
+import { FILE_PATH, ROLES } from "../configs/app.config";
+import * as fs from "fs";
+import mime from "mime";
 
 export class CourseController {
   static async getAll(req: Request, res: Response) {
@@ -70,6 +72,24 @@ export class CourseController {
     const slug = req.params.slug;
     const course = await CourseService.findBySlug(slug);
     res.json({ courses: course });
+    return;
+  }
+
+  static async getImage(req: Request, res: Response) {
+    const course_id = req.params.course_id;
+    if (!course_id || !isValidObjectId(course_id)) {
+      res.status(400).json({ status: "Keine oder falsche Kurs-ID angegeben!" });
+      return;
+    }
+    const coursePath = `${FILE_PATH}/images/${course_id}`;
+    if (!fs.existsSync(coursePath)) {
+      res.status(404).json({ status: "Video nicht gefunden!" });
+      return;
+    }
+
+    let mimeType = mime.getType(coursePath) || "image/png";
+    res.setHeader("Content-Type", mimeType);
+    res.sendFile(coursePath);
     return;
   }
 }

@@ -37,4 +37,10 @@ courseRoutes.post(
 
 courseRoutes.get("/course/:slug", authenticateJWT, CourseController.findBySlug);
 
+courseRoutes.get(
+  "/course/image/:course_id",
+  authenticateJWT,
+  CourseController.getImage,
+);
+
 export default courseRoutes;
