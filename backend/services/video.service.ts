@@ -6,6 +6,9 @@ import User from "../models/user.model";
 import { IVideoComment } from "../types/VideoComment";
 import { UserService } from "./user.service";
 import { IVideoFind } from "../types/VideoFind";
+import Course, { ICourse } from "../models/course.model";
+import CourseVideo from "../models/course-video.model";
+import { ICourseInformation } from "../types/CourseInformation";
 
 export class VideoService {
   static async create(
@@ -30,8 +33,8 @@ export class VideoService {
    */
 
   static async createComment(
-    user_id: Schema.Types.ObjectId,
-    video_id: Schema.Types.ObjectId,
+    userId: Schema.Types.ObjectId,
+    videoId: Schema.Types.ObjectId,
     text: string,
     timestamp: number,
   ): Promise<Schema.Types.ObjectId | undefined> {
@@ -43,9 +46,9 @@ export class VideoService {
     if (!savedComment) return undefined;
 
     const videoComment = new VideoComment({
-      user_id,
-      video_id,
-      comment_id: savedComment._id,
+      userId,
+      videoId,
+      commentId: savedComment._id,
     });
     const savedVideoComment = await videoComment.save();
     return savedVideoComment
@@ -54,14 +57,14 @@ export class VideoService {
   }
 
   static async getComments(
-    video_id: string,
+    videoId: string,
   ): Promise<IVideoComment[] | undefined> {
-    const videoComments = await VideoComment.find({ video_id });
+    const videoComments = await VideoComment.find({ videoId });
     if (!videoComments) return undefined;
 
     const commentPromises = videoComments.map(async (videoComment) => {
-      let comment = await Comment.findById(videoComment.comment_id);
-      let user = await User.findById(videoComment.user_id);
+      let comment = await Comment.findById(videoComment.commentId);
+      let user = await User.findById(videoComment.userId);
       if (!comment || !user) return undefined;
       return {
         user: {
@@ -82,13 +85,46 @@ export class VideoService {
     return comments;
   }
 
-  static async getInformation(video_id: string): Promise<IVideo | undefined> {
-    if (!isValidObjectId(video_id)) {
+  static async getInformation(videoId: string): Promise<IVideo | undefined> {
+    if (!isValidObjectId(videoId)) {
       return undefined;
     }
-    const video = await Video.findById(video_id);
+    const video = await Video.findById(videoId);
     if (!video) return undefined;
     return video;
+  }
+
+  static async getCourses(
+    videoId: string,
+  ): Promise<ICourseInformation[] | undefined> {
+    if (!isValidObjectId(videoId)) {
+      return undefined;
+    }
+
+    const courseVideos = await CourseVideo.find({ videoId });
+    const coursePromises = courseVideos.map(async (courseVideo) => {
+      if (!courseVideo) return undefined;
+      const course = await Course.findById(courseVideo.courseId);
+      if (!course) return undefined;
+      const user = await User.findById(course.creator_id);
+      if (!user) return undefined;
+      return {
+        _id: course._id,
+        name: course.name,
+        slug: course.slug,
+        creation_date: course.creation_date,
+        creator: {
+          username: user.username,
+          role: user.role,
+        },
+      };
+    });
+    const resolvedPromises = await Promise.all(coursePromises);
+    const result = resolvedPromises.filter(
+      (course): course is ICourseInformation => course !== null,
+    );
+    if (!result) return undefined;
+    return result;
   }
 
   static async find(name: string): Promise<IVideoFind[] | undefined> {

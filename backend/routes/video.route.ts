@@ -34,6 +34,12 @@ videoRoutes.get(
   VideoController.streamVideo,
 );
 
-videoRoutes.get("/video/:video_id", authenticateJWT, VideoController.findId);
+videoRoutes.get(
+  "/video/:videoId/information",
+  authenticateJWT,
+  VideoController.getInformation,
+);
+
+videoRoutes.get("/video/:videoId", authenticateJWT, VideoController.findId);
 
 export default videoRoutes;

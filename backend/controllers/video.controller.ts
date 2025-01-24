@@ -14,21 +14,21 @@ export class VideoController {
       res.status(400).json({ error: "Die länge des Videos ist keine Zahl" });
       return;
     }
-    const video_id = await VideoService.create(title, length);
-    if (!video_id) {
+    const videoId = await VideoService.create(title, length);
+    if (!videoId) {
       res.status(500).json({ error: "Video konnte nicht erstellt werden!" });
       return;
     }
-    res.json({ video: video_id });
+    res.json({ video: videoId });
     return;
   }
 
   static async createComment(req: Request, res: Response) {
-    const { video_id, text, timestamp } = req.body;
-    const user_id = res.locals.decodedJWT;
+    const { videoId, text, timestamp } = req.body;
+    const userId = res.locals.decodedJWT;
     const result = await VideoService.createComment(
-      user_id,
-      video_id,
+      userId,
+      videoId,
       text,
       timestamp,
     );
@@ -41,27 +41,49 @@ export class VideoController {
   }
 
   static async getComments(req: Request, res: Response) {
-    const { video_id } = req.params;
-    if (!isValidObjectId(video_id)) {
+    const { videoId } = req.params;
+    if (!isValidObjectId(videoId)) {
       res.status(400).json({ status: ERROR_MESSAGE });
       return;
     }
-    const result = await VideoService.getComments(video_id);
+    const result = await VideoService.getComments(videoId);
     if (!result) {
       res.status(404).json({ status: "Keine Kommentare gefunden!" });
     }
     res.json({ comments: result });
   }
 
+  static async getInformation(req: Request, res: Response) {
+    const videoId = req.params.videoId;
+
+    const videoInformation = await VideoService.getInformation(videoId);
+    let videoCourses = await VideoService.getCourses(videoId);
+    if (!videoInformation) {
+      res.status(500).json({ status: ERROR_MESSAGE });
+      return;
+    }
+    if (!videoCourses) {
+      videoCourses = [];
+    }
+
+    res.json({
+      information: {
+        video: videoInformation,
+        course: videoCourses,
+      },
+    });
+    return;
+  }
+
   static async streamVideo(req: Request, res: Response) {
-    const video_id = req.params.video_id;
+    const videoId = req.params.videoId;
     const range = req.headers.range || "1000";
-    if (!video_id || !range) {
+    if (!videoId || !range) {
       res.status(400).json({ status: "Fehlende Parameter!" });
       return;
     }
 
-    const video = await VideoService.getInformation(video_id);
+    const video = await VideoService.getInformation(videoId);
     if (!video) {
       res.status(404).json({ status: "Video nicht gefunden!" });
       return;
@@ -93,22 +115,22 @@ export class VideoController {
   }
 
   static async findId(req: Request, res: Response) {
-    const user_id = res.locals.decodedJWT;
-    const video_id = req.params.video_id;
+    const userId = res.locals.decodedJWT;
+    const videoId = req.params.videoId;
 
-    const video = await VideoService.getInformation(video_id);
+    const video = await VideoService.getInformation(videoId);
     if (!video) {
       res.status(404).json({ status: "Video nicht gefunden!" });
       return;
     }
 
-    const seen = await UserService.checkIfSeen(user_id, video._id as string);
+    const seen = await UserService.checkIfSeen(userId, video._id as string);
     if (!seen) {
       res.status(404).json({ status: "Video nicht gefunden!" });
       return;
     }
 
-    const user = await UserService.getInformation(user_id);
+    const user = await UserService.getInformation(userId);
     if (!user) {
       res.status(401).json({ status: "Benutzer nicht gefunden!" });
       return;
