@@ -4,6 +4,7 @@ import { ERROR_MESSAGE, FILE_PATH } from "../configs/app.config";
 import { isValidObjectId } from "mongoose";
 import * as fs from "fs";
 import mime from "mime";
+import { UserService } from "../services/user.service";
 
 export class VideoController {
   // Add video storing
@@ -89,5 +90,42 @@ export class VideoController {
     res.writeHead(206, headers);
     const videoStream = fs.createReadStream(videoPath, { start, end });
     videoStream.pipe(res);
+  }
+
+  static async findId(req: Request, res: Response) {
+    const user_id = res.locals.decodedJWT;
+    const video_id = req.params.video_id;
+
+    const video = await VideoService.getInformation(video_id);
+    if (!video) {
+      res.status(404).json({ status: "Video nicht gefunden!" });
+      return;
+    }
+
+    const seen = await UserService.checkIfSeen(user_id, video._id as string);
+    if (!seen) {
+      res.status(404).json({ status: "Video nicht gefunden!" });
+      return;
+    }
+
+    const user = await UserService.getInformation(user_id);
+    if (!user) {
+      res.status(401).json({ status: "Benutzer nicht gefunden!" });
+      return;
+    }
+
+    const result = {
+      _id: video._id,
+      title: video.title,
+      length: video.length,
+      creation_date: video.creation_date,
+      uploader: {
+        username: user.username,
+        role: user.role,
+      },
+    };
+
+    res.json({ video: result });
+    return;
   }
 }
