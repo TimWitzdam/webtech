@@ -251,4 +251,27 @@ export class UserService {
 
     return result._id as Schema.Types.ObjectId;
   }
+
+  static async checkIfSeen(
+    user_id: Schema.Types.ObjectId,
+    video_id: string,
+  ): Promise<boolean | undefined> {
+    const userVideoList = await UserVideo.find({
+      $and: [{ user_id: user_id }, { video_id: video_id }],
+    });
+
+    if (!userVideoList) {
+      return undefined;
+    }
+    if (userVideoList.length > 1 || userVideoList.length === 0) {
+      return undefined;
+    }
+
+    const userVideo = userVideoList[0];
+    if (!userVideo) {
+      return undefined;
+    }
+
+    return userVideo.seen;
+  }
 }

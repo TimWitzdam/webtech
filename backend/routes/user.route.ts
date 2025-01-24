@@ -35,6 +35,9 @@ userRoutes.get(
 );
 
 // Sets video as seen
+userRoutes.get("/user/seen/:video_id", authenticateJWT, UserController.getSeen);
+
+// Sets video as seen
 userRoutes.post("/user/seen", authenticateJWT, UserController.seen);
 
 // Videos the user recently viewed

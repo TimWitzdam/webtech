@@ -231,4 +231,20 @@ export class UserController {
     res.json({ status: response });
     return;
   }
+
+  static async getSeen(req: Request, res: Response) {
+    const user_id = res.locals.decodedJWT;
+    const video_id = req.params.video_id;
+    if (!isValidObjectId(video_id) || !isValidObjectId(user_id)) {
+      res.status(400).json({ status: ERROR_MESSAGE });
+      return;
+    }
+    const response = await UserService.checkIfSeen(user_id, video_id);
+    if (!response) {
+      res.status(500).json({ status: ERROR_MESSAGE });
+      return;
+    }
+    res.json({ status: response });
+    return;
+  }
 }
