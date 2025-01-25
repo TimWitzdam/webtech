@@ -35,7 +35,7 @@ userRoutes.get(
 );
 
 // Sets video as seen
-userRoutes.get("/user/seen/:video_id", authenticateJWT, UserController.getSeen);
+userRoutes.get("/user/seen/:videoId", authenticateJWT, UserController.getSeen);
 
 // Sets video as seen
 userRoutes.post("/user/seen", authenticateJWT, UserController.seen);

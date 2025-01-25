@@ -45,7 +45,7 @@ courseRoutes.get(
 );
 
 courseRoutes.get(
-  "/course/image/:course_id",
+  "/course/image/:courseId",
   authenticateJWT,
   CourseController.getImage,
 );

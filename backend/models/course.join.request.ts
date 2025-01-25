@@ -1,6 +1,6 @@
 import { z } from "zod";
 
 export const courseJoinRequest = z.object({
-  course_id: z.string(),
+  courseId: z.string(),
   permission: z.string(),
 });

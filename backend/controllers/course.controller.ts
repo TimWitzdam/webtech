@@ -9,13 +9,13 @@ import mime from "mime";
 
 export class CourseController {
   static async create(req: Request, res: Response) {
-    const user_id = res.locals.decodedJWT;
+    const userId = res.locals.decodedJWT;
     const { name, slug, description, collaboratorIds, languages } = req.body;
     let new_course = await CourseService.create(
       name,
       slug,
       description,
-      user_id,
+      userId,
       collaboratorIds,
       languages,
     );
@@ -45,26 +45,26 @@ export class CourseController {
   }
 
   static async add(req: Request, res: Response) {
-    const { course_id, video_id } = req.body;
-    if (!isValidObjectId(course_id) || !isValidObjectId(video_id)) {
+    const { courseId, videoId } = req.body;
+    if (!isValidObjectId(courseId) || !isValidObjectId(videoId)) {
       res.status(403).json({ error: "Invalid ObjectId!" });
       return;
     }
 
-    const newCourseVideo = await CourseService.add(course_id, video_id);
+    const newCourseVideo = await CourseService.add(courseId, videoId);
     if (!newCourseVideo) {
       res.status(403).json({ error: "Kurs konnte nicht erstellt werden!" });
       return;
     }
-    res.json({ course: course_id });
+    res.json({ course: courseId });
     return;
   }
 
   static async join(req: Request, res: Response) {
-    const { course_id, permission } = req.body;
-    const user_id = res.locals.decodedJWT;
+    const { courseId, permission } = req.body;
+    const userId = res.locals.decodedJWT;
 
-    if (!isValidObjectId(course_id) || !isValidObjectId(user_id)) {
+    if (!isValidObjectId(courseId) || !isValidObjectId(userId)) {
       res.status(403).json({ error: "Invalid ObjectId!" });
       return;
     }
@@ -74,8 +74,8 @@ export class CourseController {
     }
 
     const newCourseUser = await CourseService.join(
-      course_id,
-      user_id,
+      courseId,
+      userId,
       permission,
     );
 
@@ -96,12 +96,12 @@ export class CourseController {
   }
 
   static async getImage(req: Request, res: Response) {
-    const course_id = req.params.course_id;
-    if (!course_id || !isValidObjectId(course_id)) {
+    const courseId = req.params.courseId;
+    if (!courseId || !isValidObjectId(courseId)) {
       res.status(400).json({ status: "Keine oder falsche Kurs-ID angegeben!" });
       return;
     }
-    const coursePath = `${FILE_PATH}/images/${course_id}`;
+    const coursePath = `${FILE_PATH}/images/${courseId}`;
     if (!fs.existsSync(coursePath)) {
       res.status(404).json({ status: "Video nicht gefunden!" });
       return;

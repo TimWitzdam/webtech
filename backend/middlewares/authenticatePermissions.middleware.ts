@@ -4,17 +4,17 @@ import { ERROR_MESSAGE, logger } from "../configs/app.config";
 
 export function authenticatePermissions(role: string) {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const user_id = res.locals.decodedJWT;
-    if (!user_id) {
+    const userId = res.locals.decodedJWT;
+    if (!userId) {
       logger.error(
-        `Couldn't read res.locals.decodedJWT ${user_id} (authenticatePermissions)`,
+        `Couldn't read res.locals.decodedJWT ${userId} (authenticatePermissions)`,
       );
       res.status(500).json({ error: ERROR_MESSAGE });
       return;
     }
-    const user_document = await User.findById(user_id);
-    if (user_document) {
-      if (user_document.role === role) {
+    const userDocument = await User.findById(userId);
+    if (userDocument) {
+      if (userDocument.role === role) {
         next();
         return;
       }
@@ -22,7 +22,7 @@ export function authenticatePermissions(role: string) {
       return;
     }
     logger.warn(
-      `User with ID: ${user_id} wasn't found! (authenticatePermissions)`,
+      `User with ID: ${userId} wasn't found! (authenticatePermissions)`,
     );
     res.status(500).json({ error: ERROR_MESSAGE });
     return;
