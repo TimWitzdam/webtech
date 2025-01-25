@@ -57,7 +57,7 @@ userRoutes.get("/user/courses", authenticateJWT, UserController.getCourses);
 userRoutes.post("/user/save", authenticateJWT, UserController.saveVideo);
 
 // Get bookmarked user videos
-userRoutes.get("/user/saved", authenticateJWT, UserController.savedVideos);
+userRoutes.get("/user/save", authenticateJWT, UserController.savedVideos);
 
 userRoutes.post(
   "/user/change-password",

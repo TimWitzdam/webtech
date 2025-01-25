@@ -1,6 +1,6 @@
 import { Schema } from "mongoose";
 import User from "../models/user.model";
-import Video, { IVideo } from "../models/video.model";
+import Video from "../models/video.model";
 import UserVideo from "../models/user-video.model";
 import { ILastSeenVideo } from "../types/LastSeenVideo";
 import CourseUser from "../models/course-user.model";
@@ -245,24 +245,64 @@ export class UserService {
 
   static async getSavedVideos(
     userId: Schema.Types.ObjectId,
-  ): Promise<IVideo[] | null> {
+  ): Promise<ILastSeenVideo[] | null> {
     const savedVideoDocuments = await Saved.find({ userId });
     if (!savedVideoDocuments) return null;
 
     const savedVideoPromises = savedVideoDocuments.map(async (saved) => {
       const video = await Video.findById(saved.videoId);
-      if (!video) return null;
+      const courseVideos = await CourseVideo.find({
+        videoId: saved.videoId,
+      });
+
+      if (!video || !courseVideos) {
+        return null;
+      }
+
+      const coursePromises = courseVideos.map(async (courseVideo) => {
+        const course = await Course.findById(courseVideo.courseId);
+        if (!course) return null;
+        return {
+          _id: course._id,
+          name: course.name,
+          slug: course.slug,
+        };
+      });
+      const resolvedPromises = await Promise.all(coursePromises);
+      const courseResults = resolvedPromises.filter(
+        (
+          course,
+        ): course is {
+          _id: Schema.Types.ObjectId;
+          name: string;
+          slug: string;
+        } => course !== null,
+      );
+
+      const userVideo = await UserVideo.find({
+        userId,
+        videoId: saved.videoId,
+      });
+      if (!userVideo) {
+        return null;
+      }
+
       return {
-        _id: video._id,
-        title: video.title,
-        length: video.length,
-        creationDate: video.creationDate,
+        video: {
+          _id: video._id as Schema.Types.ObjectId,
+          title: video.title,
+          length: video.length,
+          creationDate: video.creationDate,
+        },
+        lastSeen: userVideo[0].lastSeen,
+        progress: (userVideo[0].progress / video.length) * 100,
+        foundIn: courseResults,
       };
     });
 
     const savedVideoResults = await Promise.all(savedVideoPromises);
     const result = savedVideoResults.filter(
-      (video): video is IVideo => video !== null,
+      (video): video is ILastSeenVideo => video !== null,
     );
 
     return result ? result : null;
