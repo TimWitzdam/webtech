@@ -75,6 +75,7 @@ export class UserController {
 
     res.json({
       username: userInformation.username,
+      realName: userInformation.realName,
       role: userInformation.role,
     });
   }
@@ -183,28 +184,7 @@ export class UserController {
       new_password,
     );
 
-    if (result === undefined) {
-      res.status(501).json({ status: ERROR_MESSAGE });
-      return;
-    } else if (result === false) {
-      res.status(401).json({ status: "Falsches Passwort!" });
-      return;
-    }
-
-    res.json({ status: "Passwort erfolgreich geändert!" });
-    return;
-  }
-
-  static async forgotPassword(req: Request, res: Response) {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      res.status(400).json({ status: "Fehlende Parameter!" });
-    }
-
-    const result = await UserService.forgotPassword(email, password);
-
-    if (result === undefined) {
+    if (result === null) {
       res.status(501).json({ status: ERROR_MESSAGE });
       return;
     } else if (result === false) {
@@ -220,7 +200,7 @@ export class UserController {
     const userId = res.locals.decodedJWT;
     const notifications = await UserService.getNotifications(userId);
     if (!notifications) {
-      res.status(404).json({ status: "Keine neuen Benachrichtigungen" });
+      res.json([]);
     }
     res.json({ notifications });
     return;

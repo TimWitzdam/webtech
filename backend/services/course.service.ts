@@ -15,9 +15,9 @@ export class CourseService {
     emoji: string,
     description: string,
     creatorId: Schema.Types.ObjectId,
-    collaboratorIds: Schema.Types.ObjectId | undefined,
-    languages: string[] | undefined,
-  ): Promise<Schema.Types.ObjectId | undefined> {
+    collaboratorIds: Schema.Types.ObjectId | null,
+    languages: string[] | null,
+  ): Promise<Schema.Types.ObjectId | null> {
     const course = new Course({
       name,
       description,
@@ -28,12 +28,13 @@ export class CourseService {
       creatorId,
     });
     const savedCourse = await course.save();
-    return savedCourse === course ? (savedCourse._id as ObjectId) : undefined;
+    return savedCourse === course ? (savedCourse._id as ObjectId) : null;
   }
 
   static async getCourseVideos(
+    userId: Schema.Types.ObjectId,
     courseId: Schema.Types.ObjectId,
-  ): Promise<IVideoFind[] | undefined> {
+  ): Promise<IVideoFind[] | null> {
     const courseVideos = await CourseVideo.find({ courseId });
 
     const videoPromises = courseVideos.map(async (courseVideo) => {
@@ -41,6 +42,10 @@ export class CourseService {
       if (!video) return null;
       const creator = await UserService.getInformation(video.uploaderId);
       if (!creator) return null;
+      const userVideo = await UserService.checkIfSeen(
+        userId as Schema.Types.ObjectId,
+        video._id as string,
+      );
       return {
         _id: video._id,
         title: video.title,
@@ -50,6 +55,7 @@ export class CourseService {
           role: creator.role,
         },
         creationDate: video.creationDate,
+        seen: userVideo ? userVideo : false,
       };
     });
     const resolvedVideos = await Promise.all(videoPromises);
@@ -62,11 +68,11 @@ export class CourseService {
   static async add(
     courseIds: Schema.Types.ObjectId,
     videoId: Schema.Types.ObjectId,
-  ): Promise<Schema.Types.ObjectId | undefined> {
+  ): Promise<Schema.Types.ObjectId | null> {
     const video = Video.findById(videoId);
     const course = Course.findById(courseIds);
     if (!video || !course) {
-      return undefined;
+      return null;
     }
 
     const courseVideo = new CourseVideo({
@@ -76,18 +82,18 @@ export class CourseService {
     const savedCourseVideo = await courseVideo.save();
     return savedCourseVideo === courseVideo
       ? (savedCourseVideo._id as ObjectId)
-      : undefined;
+      : null;
   }
 
   static async join(
     courseIds: Schema.Types.ObjectId,
     userId: Schema.Types.ObjectId,
     permission: string,
-  ): Promise<Schema.Types.ObjectId | undefined> {
+  ): Promise<Schema.Types.ObjectId | null> {
     const user = await User.findById(userId);
     const course = await Course.findById(courseIds);
     if (!user || !course) {
-      return undefined;
+      return null;
     }
 
     const courseUser = new CourseUser({
@@ -98,27 +104,28 @@ export class CourseService {
     const savedCourseUser = await courseUser.save();
     return savedCourseUser === courseUser
       ? (savedCourseUser._id as ObjectId)
-      : undefined;
+      : null;
   }
 
   static async findById(
     videoId: Schema.Types.ObjectId,
-  ): Promise<ICourseFind | undefined> {
+  ): Promise<ICourseFind | null> {
     if (!isValidObjectId(videoId)) {
-      return undefined;
+      return null;
     }
     const course = await Course.findById(videoId);
-    if (!course) return undefined;
+    if (!course) return null;
 
     const creator = await UserService.getInformation(course.creatorId);
-    if (!creator) return undefined;
+    if (!creator) return null;
 
     const collaboratorPromises = course.collaboratorIds.map(
       async (collaborator) => {
         const user = await User.findById(collaborator);
-        if (!user) return undefined;
+        if (!user) return null;
         return {
           username: user.username,
+          realName: user.realName,
           role: user.role,
         };
       },
@@ -126,7 +133,9 @@ export class CourseService {
 
     const collaboratorResolved = await Promise.all(collaboratorPromises);
     const collaboratorResults = collaboratorResolved.filter(
-      (collaborator): collaborator is { username: string; role: string } =>
+      (
+        collaborator,
+      ): collaborator is { username: string; realName: string; role: string } =>
         collaborator !== null,
     );
 
@@ -139,7 +148,8 @@ export class CourseService {
       languages: course.languages || [],
       collaborators: collaboratorResults || [],
       creator: {
-        name: creator.username,
+        username: creator.username,
+        realName: creator.realName,
         role: creator.role,
       },
       creationDate: course.creationDate,
@@ -147,11 +157,11 @@ export class CourseService {
     };
   }
 
-  static async findBySlug(slug: string): Promise<ICourseFind[] | undefined> {
+  static async findBySlug(slug: string): Promise<ICourseFind[] | null> {
     const regex = new RegExp(`${slug}`, "i");
     const courses = await Course.find({ slug: regex });
     if (!courses) {
-      return undefined;
+      return null;
     }
 
     const coursePromises = courses.map(async (course) => {
@@ -166,14 +176,14 @@ export class CourseService {
       (document): document is ICourseFind => document !== null,
     );
 
-    return results ? results : undefined;
+    return results ? results : null;
   }
 
-  static async findByName(name: string): Promise<ICourseFind[] | undefined> {
+  static async findByName(name: string): Promise<ICourseFind[] | null> {
     const regex = new RegExp(`${name}`, "i");
     const courses = await Course.find({ name: regex });
     if (!courses) {
-      return undefined;
+      return null;
     }
 
     const coursePromises = courses.map(async (course) => {
@@ -188,6 +198,6 @@ export class CourseService {
       (document): document is ICourseFind => document !== null,
     );
 
-    return results ? results : undefined;
+    return results ? results : null;
   }
 }

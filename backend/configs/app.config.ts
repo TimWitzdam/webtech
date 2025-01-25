@@ -19,10 +19,10 @@ export const logger = new Logger("server");
 
 const videoStorage = multer.diskStorage({
   destination: function(req, file, cb) {
-    if (!process.env.FILE_PATH) return undefined;
+    if (!process.env.FILE_PATH) return null;
 
     const uploadPath = `${process.env.FILE_PATH.toString()}/videos`;
-    if (!uploadPath) return undefined;
+    if (!uploadPath) return null;
 
     fs.mkdirSync(uploadPath, { recursive: true });
     cb(null, uploadPath);
@@ -34,10 +34,10 @@ const videoStorage = multer.diskStorage({
 
 const imageStorage = multer.diskStorage({
   destination: function(req, file, cb) {
-    if (!process.env.FILE_PATH) return undefined;
+    if (!process.env.FILE_PATH) return null;
 
     const uploadPath = `${process.env.FILE_PATH.toString()}/images`;
-    if (!uploadPath) return undefined;
+    if (!uploadPath) return null;
 
     fs.mkdirSync(uploadPath, { recursive: true });
     cb(null, uploadPath);

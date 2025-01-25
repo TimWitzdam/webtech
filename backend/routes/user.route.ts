@@ -65,8 +65,6 @@ userRoutes.post(
   UserController.changePassword,
 );
 
-userRoutes.post("/user/forgot-password", UserController.forgotPassword); //TODO: Decide if needed
-
 userRoutes.get(
   "/user/notifications",
   authenticateJWT,

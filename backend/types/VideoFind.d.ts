@@ -9,4 +9,5 @@ export interface IVideoFind {
     role: string;
   };
   creationDate: Date;
+  seen: boolean;
 }

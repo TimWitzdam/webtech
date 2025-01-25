@@ -13,4 +13,5 @@ export interface ICourseUserReturn {
   };
   creationDate: Date;
   lastChanged: Date;
+  progress: { current: number; total: number };
 }

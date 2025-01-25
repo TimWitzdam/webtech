@@ -118,6 +118,12 @@ export class VideoController {
     const userId = res.locals.decodedJWT;
     const videoId = req.params.videoId;
 
+    if (!isValidObjectId(videoId)) {
+      res
+        .status(400)
+        .json({ status: "Keine oder falsche Video-ID angegeben!" });
+    }
+
     const video = await VideoService.getInformation(videoId);
     if (!video) {
       res.status(404).json({ status: "Video nicht gefunden!" });
@@ -136,6 +142,12 @@ export class VideoController {
       return;
     }
 
+    const courses = await VideoService.getCourses(video._id as string);
+    if (courses === null) {
+      res.status(500).json({ status: ERROR_MESSAGE });
+      return;
+    }
+
     const result = {
       _id: video._id,
       title: video.title,
@@ -145,6 +157,7 @@ export class VideoController {
         username: user.username,
         role: user.role,
       },
+      courses,
     };
 
     res.json({ video: result });

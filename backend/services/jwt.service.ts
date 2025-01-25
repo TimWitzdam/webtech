@@ -3,7 +3,7 @@ import { UserService } from "./user.service";
 import jwt from "jsonwebtoken";
 
 export class JWTService {
-  static createJWTToken(id: string, length: string | undefined = "7d"): string {
+  static createJWTToken(id: string, length: string | null = "7d"): string {
     if (!length) {
       const jwtToken = jwt.sign({ id }, JWT_SECRET, {});
       return jwtToken;
@@ -14,7 +14,7 @@ export class JWTService {
     return jwtToken;
   }
 
-  static async verifyJWTToken(token: string): Promise<string | undefined> {
+  static async verifyJWTToken(token: string): Promise<string | null> {
     try {
       const dtoken = jwt.verify(token, JWT_SECRET);
       if (typeof dtoken === "object") {
@@ -27,8 +27,8 @@ export class JWTService {
       }
     } catch (error) {
       logger.error(`Verification of JWT Token failed: \n ${error}`);
-      return undefined;
+      return null;
     }
-    return undefined;
+    return null;
   }
 }

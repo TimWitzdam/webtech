@@ -14,7 +14,7 @@ export class VideoService {
   static async create(
     title: string,
     length: number,
-  ): Promise<Schema.Types.ObjectId | undefined> {
+  ): Promise<Schema.Types.ObjectId | null> {
     const video = new Video({
       title,
       length,
@@ -23,7 +23,7 @@ export class VideoService {
     const saved_video = await video.save();
     return saved_video === video
       ? (saved_video._id as Schema.Types.ObjectId)
-      : undefined;
+      : null;
   }
 
   /* TODO:
@@ -37,13 +37,13 @@ export class VideoService {
     videoId: Schema.Types.ObjectId,
     text: string,
     timestamp: number,
-  ): Promise<Schema.Types.ObjectId | undefined> {
+  ): Promise<Schema.Types.ObjectId | null> {
     const comment = new Comment({
       text,
       timestamp,
     });
     const savedComment = await comment.save();
-    if (!savedComment) return undefined;
+    if (!savedComment) return null;
 
     const videoComment = new VideoComment({
       userId,
@@ -53,19 +53,19 @@ export class VideoService {
     const savedVideoComment = await videoComment.save();
     return savedVideoComment
       ? (savedVideoComment._id as Schema.Types.ObjectId)
-      : undefined;
+      : null;
   }
 
   static async getComments(
     videoId: string,
-  ): Promise<IFormattedComment[] | undefined> {
+  ): Promise<IFormattedComment[] | null> {
     const videoComments = await VideoComment.find({ videoId });
-    if (!videoComments) return undefined;
+    if (!videoComments) return null;
 
     const commentPromises = videoComments.map(async (videoComment) => {
       let comment = await Comment.findById(videoComment.commentId);
       let user = await User.findById(videoComment.userId);
-      if (!comment || !user) return undefined;
+      if (!comment || !user) return null;
       return {
         username: user.username,
         role: user.role,
@@ -79,37 +79,38 @@ export class VideoService {
     const comments = resolvedPromises.filter(
       (comment): comment is IFormattedComment => comment !== null,
     );
-    if (!comments) return undefined;
+    if (!comments) return null;
     return comments;
   }
 
-  static async getInformation(videoId: string): Promise<IVideo | undefined> {
+  static async getInformation(videoId: string): Promise<IVideo | null> {
     if (!isValidObjectId(videoId)) {
-      return undefined;
+      return null;
     }
     const video = await Video.findById(videoId);
-    if (!video) return undefined;
+    if (!video) return null;
     return video;
   }
 
   static async getCourses(
     videoId: string,
-  ): Promise<ICourseInformation[] | undefined> {
+  ): Promise<ICourseInformation[] | null> {
     if (!isValidObjectId(videoId)) {
-      return undefined;
+      return null;
     }
 
     const courseVideos = await CourseVideo.find({ videoId });
     const coursePromises = courseVideos.map(async (courseVideo) => {
-      if (!courseVideo) return undefined;
+      if (!courseVideo) return null;
       const course = await Course.findById(courseVideo.courseId);
-      if (!course) return undefined;
+      if (!course) return null;
       const user = await User.findById(course.creatorId);
-      if (!user) return undefined;
+      if (!user) return null;
       return {
         _id: course._id,
         name: course.name,
         slug: course.slug,
+        emoji: course.emoji,
         creationDate: course.creationDate,
         creator: {
           username: user.username,
@@ -121,16 +122,16 @@ export class VideoService {
     const result = resolvedPromises.filter(
       (course): course is ICourseInformation => course !== null,
     );
-    if (!result) return undefined;
+    if (!result) return null;
     return result;
   }
 
-  static async find(name: string): Promise<IVideoFind[] | undefined> {
+  static async find(name: string): Promise<IVideoFind[] | null> {
     const regex = new RegExp(`${name}`, "i");
     const videos = await Video.find({ title: regex });
     const videoPromises = videos.map(async (video) => {
       const creator = await UserService.getInformation(video.uploaderId);
-      if (!creator) return undefined;
+      if (!creator) return null;
       return {
         _id: video._id,
         title: video.title,
@@ -146,7 +147,7 @@ export class VideoService {
     const videoResults = resolvedVideos.filter(
       (videos): videos is IVideoFind => videos !== null,
     );
-    if (!videoResults) return undefined;
+    if (!videoResults) return null;
     return videoResults;
   }
 }

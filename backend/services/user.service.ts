@@ -15,12 +15,14 @@ import { IVideoFind } from "../types/VideoFind";
 import CourseVideo from "../models/course-video.model";
 import { CourseService } from "./course.service";
 
+const { ObjectId } = require("mongoose").mongo;
+
 export class UserService {
   static async createUser(
     username: string,
     password: string,
     role: string = "Student",
-  ): Promise<any | undefined> {
+  ): Promise<any | null> {
     if (!role) role = "Student";
 
     const user = new User({
@@ -31,38 +33,38 @@ export class UserService {
     const saved_user = await user.save();
     return saved_user === user
       ? (saved_user._id as Schema.Types.ObjectId)
-      : undefined;
+      : null;
   }
 
   static async getInformation(id: Schema.Types.ObjectId) {
     let result = await User.findById(id);
-    return result ? result : undefined;
+    return result ? result : null;
   }
 
   static async getIdByUsername(username: string) {
     let result = await User.findOne({ username });
-    return result ? result._id : undefined;
+    return result ? result._id : null;
   }
 
   static async getId(id: Schema.Types.ObjectId) {
     let result = await User.findById(id);
-    return result ? result._id : undefined;
+    return result ? result._id : null;
   }
 
   static async watch(
     videoId: Schema.Types.ObjectId,
     userId: Schema.Types.ObjectId,
     progress: number,
-  ): Promise<Schema.Types.ObjectId | undefined> {
+  ): Promise<Schema.Types.ObjectId | null> {
     const video = await Video.findById(videoId);
     const user = await User.findById(userId);
     if (!video || !user) {
-      return undefined;
+      return null;
     }
 
     const userVideo = await UserVideo.find({ videoId, userId });
     if (!userVideo || userVideo.length > 1) {
-      return undefined;
+      return null;
     }
 
     if (userVideo.length > 0) {
@@ -73,7 +75,7 @@ export class UserService {
       }
       const result = await userVideo[0].save();
       if (!result) {
-        return undefined;
+        return null;
       }
       return result._id as Schema.Types.ObjectId;
     }
@@ -88,19 +90,19 @@ export class UserService {
     const savedUserVideo = await userVideoList.save();
     return savedUserVideo === userVideoList
       ? (savedUserVideo._id as Schema.Types.ObjectId)
-      : undefined;
+      : null;
   }
 
   static async getLatestVideos(
     userId: Schema.Types.ObjectId,
-  ): Promise<ILastSeenVideo[] | undefined> {
+  ): Promise<ILastSeenVideo[] | null> {
     let latestVideoDocuments = await UserVideo.find({
       userId,
       seen: false,
     });
     let latestVideos: ILastSeenVideo[] = [];
 
-    if (!latestVideoDocuments) return undefined;
+    if (!latestVideoDocuments) return null;
 
     const videoPromises = latestVideoDocuments.map(async (userVideoList) => {
       const video = await Video.findById(userVideoList.videoId);
@@ -151,20 +153,20 @@ export class UserService {
       (video): video is ILastSeenVideo => video !== null,
     );
 
-    return latestVideos ? latestVideos : undefined;
+    return latestVideos ? latestVideos : null;
   }
 
   static async getUserCourses(
     userId: Schema.Types.ObjectId,
-  ): Promise<ICourseUserReturn[] | undefined> {
+  ): Promise<ICourseUserReturn[] | null> {
     const userCourseDocuments = await CourseUser.find({ userId });
 
-    if (!userCourseDocuments) return undefined;
+    if (!userCourseDocuments) return null;
 
     const courseDocumentPromises = userCourseDocuments.map(
-      async (courseDocuments) => {
-        if (courseDocuments) {
-          const course = await Course.findById(courseDocuments.courseId);
+      async (courseDocument) => {
+        if (courseDocument) {
+          const course = await Course.findById(courseDocument.courseId);
           if (!course) return null;
           const creator = await User.findById(course.creatorId);
           if (!creator) return null;
@@ -188,6 +190,20 @@ export class UserService {
               collaborator !== null,
           );
 
+          const courseVideos = await CourseService.getCourseVideos(
+            new ObjectId(userId),
+            new ObjectId(courseDocument.courseId),
+          );
+          let progress: { current: number; total: number };
+          if (courseVideos) {
+            const current = courseVideos.filter((courseVideo) =>
+              courseVideo.seen ? true : null,
+            );
+            progress = { current: current.length, total: courseVideos.length };
+          } else {
+            progress = { current: 0, total: 0 };
+          }
+
           return {
             _id: course._id as Schema.Types.ObjectId,
             name: course.name,
@@ -201,6 +217,7 @@ export class UserService {
             },
             creationDate: course.creationDate,
             lastChanged: course.lastChanged,
+            progress: progress,
           };
         }
         return null;
@@ -208,29 +225,29 @@ export class UserService {
     );
     let userCourseResults = await Promise.all(courseDocumentPromises);
 
-    if (!userCourseResults) return undefined;
+    if (!userCourseResults) return null;
 
     const result = userCourseResults.filter(
       (course): course is ICourseUserReturn => course !== null,
     );
 
-    return result ? result : undefined;
+    return result ? result : null;
   }
 
   static async saveVideo(
     userId: Schema.Types.ObjectId,
     videoId: Schema.Types.ObjectId,
-  ): Promise<Schema.Types.ObjectId | undefined> {
+  ): Promise<Schema.Types.ObjectId | null> {
     const newSavedVideo = new Saved({ userId, videoId });
     const savedVideo = await newSavedVideo.save();
-    return savedVideo ? (savedVideo._id as Schema.Types.ObjectId) : undefined;
+    return savedVideo ? (savedVideo._id as Schema.Types.ObjectId) : null;
   }
 
   static async getSavedVideos(
     userId: Schema.Types.ObjectId,
-  ): Promise<IVideo[] | undefined> {
+  ): Promise<IVideo[] | null> {
     const savedVideoDocuments = await Saved.find({ userId });
-    if (!savedVideoDocuments) return undefined;
+    if (!savedVideoDocuments) return null;
 
     const savedVideoPromises = savedVideoDocuments.map(async (saved) => {
       const video = await Video.findById(saved.videoId);
@@ -248,14 +265,14 @@ export class UserService {
       (video): video is IVideo => video !== null,
     );
 
-    return result ? result : undefined;
+    return result ? result : null;
   }
 
   static async changePassword(
     id: Schema.Types.ObjectId,
     old_password: string,
     new_password: string,
-  ): Promise<boolean | undefined> {
+  ): Promise<boolean | null> {
     const user = await User.findById(id);
     if (!user) {
       return false;
@@ -276,18 +293,13 @@ export class UserService {
     return true;
   }
 
-  static async forgotPassword(
-    email: string,
-    password: string,
-  ): Promise<boolean | undefined> {
-    return;
-  }
-
   static async getNotifications(
     userId: Schema.Types.ObjectId,
-  ): Promise<IFormattedNotification[] | undefined> {
-    const notifications = await Notification.find({ userId });
-    if (!notifications) return undefined;
+  ): Promise<IFormattedNotification[] | null> {
+    const notifications = await Notification.find({ userId }).sort({
+      createdAt: -1,
+    });
+    if (!notifications) return null;
 
     const formatted = notifications.map((notification) => {
       return {
@@ -299,7 +311,7 @@ export class UserService {
         read: notification.read,
       };
     });
-    if (!formatted) return undefined;
+    if (!formatted) return null;
     const formattedResults = formatted.filter(
       (notification): notification is IFormattedNotification =>
         notification !== null,
@@ -311,23 +323,23 @@ export class UserService {
   static async markAsSeen(
     userId: Schema.Types.ObjectId,
     videoId: Schema.Types.ObjectId,
-  ): Promise<Schema.Types.ObjectId | undefined> {
+  ): Promise<Schema.Types.ObjectId | null> {
     const userVideoList = await UserVideo.find({
       $and: [{ userId: userId }, { videoId: videoId }],
     });
 
     if (!userVideoList) {
-      return undefined;
+      return null;
     }
     if (userVideoList.length > 1 || userVideoList.length === 0) {
-      return undefined;
+      return null;
     }
 
     const userVideo = userVideoList[0];
     userVideo.seen = true;
     const result = await userVideo.save();
     if (!result) {
-      return undefined;
+      return null;
     }
 
     return result._id as Schema.Types.ObjectId;
@@ -336,21 +348,21 @@ export class UserService {
   static async checkIfSeen(
     userId: Schema.Types.ObjectId,
     videoId: string,
-  ): Promise<boolean | undefined> {
+  ): Promise<boolean | null> {
     const userVideoList = await UserVideo.find({
       $and: [{ userId: userId }, { videoId: videoId }],
     });
 
     if (!userVideoList) {
-      return undefined;
+      return null;
     }
     if (userVideoList.length > 1 || userVideoList.length === 0) {
-      return undefined;
+      return null;
     }
 
     const userVideo = userVideoList[0];
     if (!userVideo) {
-      return undefined;
+      return null;
     }
 
     return userVideo.seen;
@@ -359,23 +371,23 @@ export class UserService {
   static async addToWatchLater(
     userId: Schema.Types.ObjectId,
     videoId: Schema.Types.ObjectId,
-  ): Promise<Schema.Types.ObjectId | undefined> {
+  ): Promise<Schema.Types.ObjectId | null> {
     const watchLaterList = await WatchLater.find({ userId, videoId });
-    if (watchLaterList.length > 0) return undefined;
+    if (watchLaterList.length > 0) return null;
 
     const watchLaterDocument = new WatchLater({ userId, videoId });
     const watchLaterResult = await watchLaterDocument.save();
     if (!watchLaterResult) {
-      return undefined;
+      return null;
     }
     return watchLaterResult._id as Schema.Types.ObjectId;
   }
 
   static async getWatchLater(
     userId: Schema.Types.ObjectId,
-  ): Promise<IVideoFind[] | undefined> {
+  ): Promise<IVideoFind[] | null> {
     const watchLaterDocuments = await WatchLater.find({ userId: userId });
-    if (!watchLaterDocuments) return undefined;
+    if (!watchLaterDocuments) return null;
     const videoPromises = watchLaterDocuments.map(async (document) => {
       const video = await Video.findById(document.videoId);
       if (!video) return null;
@@ -397,6 +409,6 @@ export class UserService {
       (videos): videos is IVideoFind => videos !== null,
     );
 
-    return videoResults ? videoResults : undefined;
+    return videoResults ? videoResults : null;
   }
 }

@@ -3,7 +3,7 @@ import { CourseService } from "../services/course.service";
 import { isValidObjectId } from "mongoose";
 const { ObjectId } = require("mongoose").mongo;
 
-import { FILE_PATH, ROLES } from "../configs/app.config";
+import { ERROR_MESSAGE, FILE_PATH, ROLES } from "../configs/app.config";
 import * as fs from "fs";
 import mime from "mime";
 
@@ -30,17 +30,38 @@ export class CourseController {
   }
 
   static async courseInformations(req: Request, res: Response) {
+    const userId = res.locals.decodedJWT;
     const courseId = req.params.courseId;
-    if (!isValidObjectId(courseId)) return undefined;
+    if (!isValidObjectId(courseId)) {
+      res.status(400).json({ status: "Keine oder falsche Kurs-ID angegeben!" });
+      return;
+    }
 
     const information = await CourseService.findById(new ObjectId(courseId));
     const courseVideos = await CourseService.getCourseVideos(
+      new ObjectId(userId),
       new ObjectId(courseId),
     );
+
+    if (!courseVideos) {
+      res.status(500).json({ status: ERROR_MESSAGE });
+      return;
+    }
+
+    if (!information) {
+      res.status(404).json({ status: "Kurs konnte nicht gefunden werden!" });
+      return;
+    }
+
+    const progress = courseVideos.filter((courseVideo) =>
+      courseVideo.seen ? true : null,
+    );
+
     res.json({
       course: {
         ...information,
         videos: courseVideos,
+        progress: { current: progress.length, total: courseVideos.length },
       },
     });
     return;
