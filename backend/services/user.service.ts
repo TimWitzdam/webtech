@@ -259,7 +259,9 @@ export class UserService {
   static async getNotifications(
     userId: Schema.Types.ObjectId,
   ): Promise<IFormattedNotification[] | undefined> {
-    const notifications = await Notification.find({ userId });
+    const notifications = await Notification.find({ userId }).sort({
+      createdAt: -1,
+    });
     if (!notifications) return undefined;
 
     const formatted = notifications.map((notification) => {

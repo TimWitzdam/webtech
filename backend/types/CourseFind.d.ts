@@ -8,7 +8,8 @@ export interface ICourseFind {
   collaborators: { username: string; role: string }[];
   languages: string[];
   creator: {
-    name: string;
+    username: string;
+    realName: string;
     role: string;
   };
   creationDate: Date;

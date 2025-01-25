@@ -7,7 +7,13 @@ export function memberOfCourse() {
     const userId = res.locals.decodedJWT;
     const { courseId, slug } = req.params;
     if (courseId) {
-      const response = await CourseUser.find({ userId, courseId });
+      let response;
+      try {
+        response = await CourseUser.find({ userId, courseId });
+      } catch (error) {
+        res.status(404).json({ status: "Kurs konnte nicht gefunden werden!" });
+        return;
+      }
       if (!response) {
         res.status(404).json({ status: "Kurs konnte nicht gefunden werden!" });
         return;

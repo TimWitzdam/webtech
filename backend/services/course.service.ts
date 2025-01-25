@@ -117,6 +117,7 @@ export class CourseService {
         if (!user) return undefined;
         return {
           username: user.username,
+          realName: user.realName,
           role: user.role,
         };
       },
@@ -124,7 +125,9 @@ export class CourseService {
 
     const collaboratorResolved = await Promise.all(collaboratorPromises);
     const collaboratorResults = collaboratorResolved.filter(
-      (collaborator): collaborator is { username: string; role: string } =>
+      (
+        collaborator,
+      ): collaborator is { username: string; realName: string; role: string } =>
         collaborator !== null,
     );
 
@@ -136,7 +139,8 @@ export class CourseService {
       languages: course.languages || [],
       collaborators: collaboratorResults || [],
       creator: {
-        name: creator.username,
+        username: creator.username,
+        realName: creator.realName,
         role: creator.role,
       },
       creationDate: course.creationDate,
