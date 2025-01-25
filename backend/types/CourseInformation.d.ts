@@ -7,7 +7,6 @@ export interface ICourseInformation {
   creationDate: Date;
   creator: {
     username: string;
-    realName: string;
     role: string;
   };
 }

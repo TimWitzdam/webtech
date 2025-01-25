@@ -12,6 +12,7 @@ export class CourseService {
   static async create(
     name: string,
     slug: string,
+    emoji: string,
     description: string,
     creatorId: Schema.Types.ObjectId,
     collaboratorIds: Schema.Types.ObjectId | undefined,
@@ -20,6 +21,7 @@ export class CourseService {
     const course = new Course({
       name,
       description,
+      emoji,
       collaboratorIds,
       languages,
       slug,
@@ -36,9 +38,9 @@ export class CourseService {
 
     const videoPromises = courseVideos.map(async (courseVideo) => {
       const video = await Video.findById(courseVideo.videoId);
-      if (!video) return undefined;
+      if (!video) return null;
       const creator = await UserService.getInformation(video.uploaderId);
-      if (!creator) return undefined;
+      if (!creator) return null;
       return {
         _id: video._id,
         title: video.title,
@@ -117,7 +119,6 @@ export class CourseService {
         if (!user) return undefined;
         return {
           username: user.username,
-          realName: user.realName,
           role: user.role,
         };
       },
@@ -125,9 +126,7 @@ export class CourseService {
 
     const collaboratorResolved = await Promise.all(collaboratorPromises);
     const collaboratorResults = collaboratorResolved.filter(
-      (
-        collaborator,
-      ): collaborator is { username: string; realName: string; role: string } =>
+      (collaborator): collaborator is { username: string; role: string } =>
         collaborator !== null,
     );
 
@@ -135,12 +134,12 @@ export class CourseService {
       _id: course._id as Schema.Types.ObjectId,
       name: course.name,
       slug: course.slug,
+      emoji: course.emoji,
       description: course.description,
       languages: course.languages || [],
       collaborators: collaboratorResults || [],
       creator: {
-        username: creator.username,
-        realName: creator.realName,
+        name: creator.username,
         role: creator.role,
       },
       creationDate: course.creationDate,

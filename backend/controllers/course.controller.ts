@@ -10,10 +10,12 @@ import mime from "mime";
 export class CourseController {
   static async create(req: Request, res: Response) {
     const userId = res.locals.decodedJWT;
-    const { name, slug, description, collaboratorIds, languages } = req.body;
+    const { name, slug, emoji, description, collaboratorIds, languages } =
+      req.body;
     let new_course = await CourseService.create(
       name,
       slug,
+      emoji,
       description,
       userId,
       collaboratorIds,

@@ -7,7 +7,6 @@ export interface ILastSeenVideo {
     slug: string;
     creator: {
       username: string;
-      realName: string;
       role: string;
     };
     creation_date: Date;

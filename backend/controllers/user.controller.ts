@@ -75,7 +75,6 @@ export class UserController {
 
     res.json({
       username: userInformation.username,
-      realName: userInformation.realName,
       role: userInformation.role,
     });
   }
@@ -221,7 +220,7 @@ export class UserController {
     const userId = res.locals.decodedJWT;
     const notifications = await UserService.getNotifications(userId);
     if (!notifications) {
-      res.json([]);
+      res.status(404).json({ status: "Keine neuen Benachrichtigungen" });
     }
     res.json({ notifications });
     return;

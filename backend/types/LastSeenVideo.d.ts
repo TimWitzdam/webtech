@@ -11,4 +11,9 @@ export interface ILastSeenVideo {
   };
   lastSeen: Date;
   progress: number;
+  foundIn: {
+    _id: Schema.Types.ObjectId;
+    name: string;
+    slug: string;
+  }[];
 }

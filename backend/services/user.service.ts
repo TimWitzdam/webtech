@@ -12,6 +12,8 @@ import Notification from "../models/notifications.model";
 import { IFormattedNotification } from "../types/FormattedNotification";
 import WatchLater from "../models/watch-later.model";
 import { IVideoFind } from "../types/VideoFind";
+import CourseVideo from "../models/course-video.model";
+import { CourseService } from "./course.service";
 
 export class UserService {
   static async createUser(
@@ -101,21 +103,46 @@ export class UserService {
     if (!latestVideoDocuments) return undefined;
 
     const videoPromises = latestVideoDocuments.map(async (userVideoList) => {
-      let video = await Video.findById(userVideoList.videoId);
-      if (video) {
-        let tmp = {
-          video: {
-            _id: video._id as Schema.Types.ObjectId,
-            title: video.title,
-            length: video.length,
-            creationDate: video.creationDate,
-          },
-          lastSeen: userVideoList.lastSeen,
-          progress: userVideoList.progress,
-        };
-        return tmp;
+      const video = await Video.findById(userVideoList.videoId);
+      const courseVideos = await CourseVideo.find({
+        videoId: userVideoList.videoId,
+      });
+
+      if (!video || !courseVideos) {
+        return null;
       }
-      return null;
+
+      const coursePromises = courseVideos.map(async (courseVideo) => {
+        const course = await Course.findById(courseVideo.courseId);
+        if (!course) return null;
+        return {
+          _id: course._id,
+          name: course.name,
+          slug: course.slug,
+        };
+      });
+      const resolvedPromises = await Promise.all(coursePromises);
+      const courseResults = resolvedPromises.filter(
+        (
+          course,
+        ): course is {
+          _id: Schema.Types.ObjectId;
+          name: string;
+          slug: string;
+        } => course !== null,
+      );
+
+      return {
+        video: {
+          _id: video._id as Schema.Types.ObjectId,
+          title: video.title,
+          length: video.length,
+          creationDate: video.creationDate,
+        },
+        lastSeen: userVideoList.lastSeen,
+        progress: (userVideoList.progress / video.length) * 100,
+        foundIn: courseResults,
+      };
     });
 
     const videoResults = await Promise.all(videoPromises);
@@ -145,7 +172,7 @@ export class UserService {
           const collaboratorPromises = course.collaboratorIds.map(
             async (collaborator) => {
               const user = await User.findById(collaborator);
-              if (!user) return undefined;
+              if (!user) return null;
               return {
                 username: user.username,
                 role: user.role,
@@ -259,9 +286,7 @@ export class UserService {
   static async getNotifications(
     userId: Schema.Types.ObjectId,
   ): Promise<IFormattedNotification[] | undefined> {
-    const notifications = await Notification.find({ userId }).sort({
-      createdAt: -1,
-    });
+    const notifications = await Notification.find({ userId });
     if (!notifications) return undefined;
 
     const formatted = notifications.map((notification) => {
@@ -275,8 +300,12 @@ export class UserService {
       };
     });
     if (!formatted) return undefined;
+    const formattedResults = formatted.filter(
+      (notification): notification is IFormattedNotification =>
+        notification !== null,
+    );
 
-    return formatted;
+    return formattedResults;
   }
 
   static async markAsSeen(
@@ -349,9 +378,9 @@ export class UserService {
     if (!watchLaterDocuments) return undefined;
     const videoPromises = watchLaterDocuments.map(async (document) => {
       const video = await Video.findById(document.videoId);
-      if (!video) return undefined;
+      if (!video) return null;
       const creator = await UserService.getInformation(video.uploaderId);
-      if (!creator) return undefined;
+      if (!creator) return null;
       return {
         _id: video._id,
         title: video.title,
