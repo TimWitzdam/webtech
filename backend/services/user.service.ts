@@ -210,6 +210,7 @@ export class UserService {
             name: course.name,
             slug: course.slug,
             description: course.description,
+            emoji: course.emoji,
             languages: course.languages || [],
             collaborators: collaboratorResults || [],
             creator: {
@@ -267,6 +268,7 @@ export class UserService {
           _id: course._id,
           name: course.name,
           slug: course.slug,
+          emoji: course.emoji,
         };
       });
       const resolvedPromises = await Promise.all(coursePromises);
@@ -277,6 +279,7 @@ export class UserService {
           _id: Schema.Types.ObjectId;
           name: string;
           slug: string;
+          emoji: string;
         } => course !== null,
       );
 

@@ -1,8 +1,12 @@
-export default function CheckMark() {
+type Props = {
+  size?: number;
+};
+
+export default function CheckMark({ size = 29 }: Props) {
   return (
     <svg
-      width="29"
-      height="33"
+      width={size}
+      height={size + 4}
       viewBox="0 0 29 33"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

@@ -8,10 +8,19 @@ import PlayIcon from "../../components/icons/PlayIcon";
 import request from "../../lib/request";
 
 export default function AppPage() {
-  const [userCourses, setUserCourses] = useState(false);
+  const [userInformation, setUserInformation] = useState<{
+    username: string;
+    realName: string;
+    role: string;
+  } | null>(null);
+  const [userCourses, setUserCourses] = useState(null);
+  const [lastSeen, setLastSeen] = useState(null);
+  const [saved, setSaved] = useState(null);
+
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
-    async function fetchData() {
+    async function fetchCourses() {
       const res = await request("api/user/courses");
 
       if (res.error) {
@@ -21,77 +30,43 @@ export default function AppPage() {
       }
     }
 
-    fetchData();
+    async function fetchUserInformation() {
+      const res = await request("api/user/information");
+
+      if (res.error) {
+        console.error(res.error);
+      } else {
+        setUserInformation(res);
+      }
+    }
+
+    async function fetchLastSeen() {
+      const res = await request("api/user/lastseen");
+
+      if (res.error) {
+        console.error(res.error);
+      } else {
+        setLastSeen(res.videos);
+      }
+    }
+
+    async function fetchSaved() {
+      const res = await request("api/user/save");
+
+      if (res.error) {
+        console.error(res.error);
+      } else {
+        setSaved(res.videos);
+      }
+    }
+
+    Promise.all([
+      fetchCourses(),
+      fetchUserInformation(),
+      fetchLastSeen(),
+      fetchSaved(),
+    ]);
   }, []);
-
-  const continueWatching = [
-    {
-      id: 1,
-      title: "Putting bits on the wire",
-      course: "Rechnernetze",
-      image: "/images/video.jpg",
-      progress: 22,
-    },
-    {
-      id: 2,
-      title: "Putting bits on the wire",
-      course: "Rechnernetze",
-      image: "/images/video.jpg",
-      progress: 22,
-    },
-    {
-      id: 3,
-      title: "Putting bits on the wire",
-      course: "Rechnernetze",
-      image: "/images/video.jpg",
-      progress: 22,
-    },
-  ];
-
-  const watchLater = [
-    {
-      id: 1,
-      title: "Putting bits on the wire",
-      course: "Rechnernetze",
-      image: "/images/video.jpg",
-      progress: 22,
-    },
-    {
-      id: 2,
-      title: "Putting bits on the wire",
-      course: "Rechnernetze",
-      image: "/images/video.jpg",
-      progress: 22,
-    },
-    {
-      id: 3,
-      title: "Putting bits on the wire",
-      course: "Rechnernetze",
-      image: "/images/video.jpg",
-      progress: 22,
-    },
-  ];
-
-  const courses = [
-    {
-      id: 1,
-      name: "Rechnernetze",
-      link: "/app/courses/rechnernetze",
-      image: "/images/webtech.png",
-      emoji: "🌐",
-      lastChanged: new Date(Date.parse("04 Jan 2025 00:12:00 GMT")),
-      progress: { current: 2, total: 5 },
-    },
-    {
-      id: 2,
-      name: "Web Technologies",
-      link: "/app/courses/web-technologies",
-      image: "/images/webtech.png",
-      emoji: "🌐",
-      lastChanged: new Date(Date.parse("04 Jan 2025 00:12:00 GMT")),
-      progress: { current: 2, total: 5 },
-    },
-  ];
 
   return (
     <div className="px-3 mt-3 max-w-screen-3xl mx-auto 3xl:px-0">
@@ -100,7 +75,9 @@ export default function AppPage() {
           <DashboardSection title="Neues" icon={<CalendarIcon />}>
             <div className="p-3 flex flex-col gap-4 md:flex-row">
               <div>
-                <h1 className="text-3xl mb-2">Guten Tag Tim!</h1>
+                <h1 className="text-3xl mb-2">
+                  Guten Tag {userInformation?.realName}!
+                </h1>
                 <p>
                   Du hast seit dem letzen Mal <b>2 neue Vorlesungen</b>{" "}
                   verpasst.
@@ -112,7 +89,8 @@ export default function AppPage() {
                 title="Putting bits on the wire"
                 course={{ name: "Rechnernetze", emoji: "🌐" }}
                 addedAt={new Date(Date.parse("04 Jan 2025 00:12:00 GMT"))}
-                duration="12:34"
+                duration={3000}
+                watched={false}
               />
             </div>
           </DashboardSection>
@@ -120,23 +98,27 @@ export default function AppPage() {
         <div className="md:col-span-2">
           <DashboardSection title="Weiterschauen" icon={<PlayIcon />} link="/#">
             <div className="p-3 grid grid-cols-2 gap-4 md:grid-cols-3">
-              {continueWatching.map((video, index) =>
-                index + 1 < continueWatching.length ? (
+              {lastSeen?.map((video, index) =>
+                index + 1 < lastSeen?.length ? (
                   <SmallVideo
-                    key={video.id}
-                    link="#"
-                    image={video.image}
-                    title={video.title}
-                    course={video.course}
+                    key={video.video._id}
+                    link={`/app/videos/${video.video._id}`}
+                    image={`${backendUrl}/api/video/image/${video.video._id}`}
+                    title={video.video.title}
+                    course={video.foundIn[0].name}
                     progress={video.progress}
                   />
                 ) : (
-                  <div key={video.id} className="col-span-2 md:col-span-1">
+                  <div
+                    key={video.video._id}
+                    className="col-span-2 md:col-span-1"
+                  >
                     <SmallVideo
-                      link="#"
-                      image={video.image}
-                      title={video.title}
-                      course={video.course}
+                      key={video.video._id}
+                      link={`/app/videos/${video.video._id}`}
+                      image={`${backendUrl}/api/video/image/${video.video._id}`}
+                      title={video.video.title}
+                      course={video.foundIn[0].name}
                       progress={video.progress}
                     />
                   </div>
@@ -152,23 +134,27 @@ export default function AppPage() {
             link="/app/saved"
           >
             <div className="p-3 grid grid-cols-2 gap-4 md:grid-cols-3">
-              {watchLater.map((video, index) =>
-                index + 1 < watchLater.length ? (
+              {saved?.map((video, index) =>
+                index + 1 < saved?.length ? (
                   <SmallVideo
-                    key={video.id}
-                    link="#"
-                    image={video.image}
-                    title={video.title}
-                    course={video.course}
+                    key={video.video._id}
+                    link={`/app/courses/${video.foundIn[0]._id}`}
+                    image={`${backendUrl}/api/course/image/${video.foundIn[0]._id}`}
+                    title={video.video.title}
+                    course={video.foundIn[0].name}
                     progress={video.progress}
                   />
                 ) : (
-                  <div key={video.id} className="col-span-2 md:col-span-1">
+                  <div
+                    key={video.video._id}
+                    className="col-span-2 md:col-span-1"
+                  >
                     <SmallVideo
-                      link="#"
-                      image={video.image}
-                      title={video.title}
-                      course={video.course}
+                      key={video.video._id}
+                      link={`/app/courses/${video.foundIn[0]._id}`}
+                      image={`${backendUrl}/api/course/image/${video.foundIn[0]._id}`}
+                      title={video.video.title}
+                      course={video.foundIn[0].name}
                       progress={video.progress}
                     />
                   </div>
@@ -184,12 +170,12 @@ export default function AppPage() {
             link="/app/courses"
           >
             <div className="p-3 grid md:grid-cols-2 gap-4">
-              {courses.map((course) => (
+              {userCourses?.map((course) => (
                 <Course
-                  key={course.id}
+                  key={course._id}
                   name={course.name}
-                  link={course.link}
-                  image={course.image}
+                  image={`${backendUrl}/api/course/image/${course._id}`}
+                  link={`/app/courses/${course._id}`}
                   emoji={course.emoji}
                   lastChanged={course.lastChanged}
                   progress={course.progress}

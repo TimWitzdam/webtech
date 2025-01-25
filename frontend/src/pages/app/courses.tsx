@@ -1,31 +1,38 @@
+import { useEffect, useState } from "react";
 import Course from "../../components/app/Course";
 import CoursesIcon from "../../components/icons/CoursesIcon";
+import request from "../../lib/request";
 
 export default function CoursesPage() {
-  const courses = [
+  const [courses, setCourses] = useState([]);
+
+  useEffect(() => {
+    async function fetchCourses() {
+      const res = await request(`api/user/courses`);
+
+      if (res.error) {
+        console.error(res.error);
+      } else {
+        setCourses(res.courses);
+      }
+    }
+
+    fetchCourses();
+  }, []);
+
+  const coursesI = [
     {
-      id: 1,
+      _id: 1,
       name: "Rechnernetze",
-      link: "/app/courses/rechnernetze",
-      image: "/images/webtech.png",
+      slug: "rechnernetze",
       emoji: "🌐",
       lastChanged: new Date(Date.parse("04 Jan 2025 00:12:00 GMT")),
       progress: { current: 2, total: 5 },
     },
     {
-      id: 2,
+      _id: 2,
       name: "Web Technologies",
-      link: "/app/courses/web-technologies",
-      image: "/images/webtech.png",
-      emoji: "🌐",
-      lastChanged: new Date(Date.parse("04 Jan 2025 00:12:00 GMT")),
-      progress: { current: 2, total: 5 },
-    },
-    {
-      id: 3,
-      name: "Web Technologies",
-      link: "/app/courses/web-technologies",
-      image: "/images/webtech.png",
+      slug: "web-technologies",
       emoji: "🌐",
       lastChanged: new Date(Date.parse("04 Jan 2025 00:12:00 GMT")),
       progress: { current: 2, total: 5 },
@@ -41,10 +48,10 @@ export default function CoursesPage() {
       <div className="px-3 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {courses.map((course) => (
           <Course
-            key={course.id}
+            key={course._id}
             name={course.name}
-            link={course.link}
-            image={course.image}
+            link={`/app/courses/${course._id}`}
+            image={`${import.meta.env.VITE_BACKEND_URL}/api/course/image/${course._id}`}
             emoji={course.emoji}
             lastChanged={course.lastChanged}
             progress={course.progress}

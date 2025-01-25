@@ -1,6 +1,6 @@
 export function formatDate(date: Date) {
   const now = new Date().getTime();
-  const then = date;
+  const then = new Date(date);
   const diffInSeconds = Math.floor((now - then.getTime()) / 1000);
 
   if (diffInSeconds < 60) {

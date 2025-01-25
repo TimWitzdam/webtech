@@ -3,14 +3,14 @@ import CoursesIcon from "../icons/CoursesIcon";
 import PlayIcon from "../icons/PlayIcon";
 
 interface CoursesSearchResult {
-  id: number;
+  _id: string;
   name: string;
-  link: string;
+  slug: string;
 }
 
 interface VideosSearchResult {
-  id: number;
-  name: string;
+  _id: string;
+  title: string;
   course: string;
   link: string;
 }
@@ -53,8 +53,8 @@ export default function SearchMenu(props: Props) {
           >
             {props.searchResults.courses.map((course, index) => (
               <a
-                key={course.id}
-                href={course.link}
+                key={course._id}
+                href={`/app/courses/${course.slug}`}
                 className={`px-3 flex gap-2 py-4 hover:bg-bg-300 ${index + 1 === props.searchResults.courses.length && props.searchResults.videos.length === 0 && "lg:rounded-b-xl"}`}
               >
                 <div className="text-primary">
@@ -72,14 +72,13 @@ export default function SearchMenu(props: Props) {
           <div className="grid">
             {props.searchResults.videos.map((video, index) => (
               <a
-                key={video.id}
+                key={video._id}
                 href={video.link}
-                className={`px-3 py-3 flex gap-2 hover:bg-bg-300 ${index + 1 === props.searchResults.videos.length && "lg:rounded-b-xl"}`}
+                className={`px-3 flex gap-2 py-4 hover:bg-bg-300 ${index + 1 === props.searchResults.videos.length && "lg:rounded-b-xl"}`}
               >
                 <PlayIcon size={16} />
                 <div>
-                  <p className="leading-none">{video.name}</p>
-                  <span className="text-xs text-gray">{video.course}</span>
+                  <p className="leading-none">{video.title}</p>
                 </div>
               </a>
             ))}

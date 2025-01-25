@@ -5,16 +5,36 @@ import UserIcon from "../components/icons/UserIcon";
 import { config } from "../config";
 import BaseButton from "../components/BaseButton";
 import BottomNavbar from "../components/BottomNavbar/BottomNavbar";
-import React from "react";
+import React, { useEffect } from "react";
 import HeaderLink from "../components/app/HeaderLink";
 import XMark from "../components/icons/XMark";
 import FilledBellIcon from "../components/icons/FilledBellIcon";
 import { formatDate } from "../lib/formatDate";
 import SearchMenu from "../components/app/SearchMenu";
+import request from "../lib/request";
 
 export default function AppLayout() {
   const [showNotifications, setShowNotifications] = React.useState(false);
   const [showSearchResults, setShowSearchResults] = React.useState(false);
+  const [notifications, setNotifications] = React.useState<Notification[]>([]);
+  const [searchResults, setSearchResults] = React.useState({
+    courses: [],
+    videos: [],
+  });
+
+  useEffect(() => {
+    async function fetchNotifications() {
+      const res = await request(`api/user/notifications`);
+
+      if (res.error) {
+        console.error(res.error);
+      } else {
+        setNotifications(res.notifications);
+      }
+    }
+
+    fetchNotifications();
+  }, []);
 
   function handleOverlayClick(e: React.MouseEvent<HTMLDivElement>) {
     if (e.target === e.currentTarget) {
@@ -22,96 +42,52 @@ export default function AppLayout() {
     }
   }
 
-  const notifications = [
+  interface Notification {
+    _id: string;
+    title: string;
+    text: string;
+    link: string;
+    createdAt: Date;
+    read: boolean;
+  }
+
+  const notificationsI = [
     {
-      id: 1,
+      _id: 1,
       title: "Neue Aufgabe",
-      description: "Löse die Aufgabe 2.1",
+      text: "Löse die Aufgabe 2.1",
       link: "/app/courses/rechnernetze",
       createdAt: new Date(Date.parse("04 Jan 2025 00:12:00 GMT")),
       read: false,
     },
     {
-      id: 2,
+      _id: 2,
       title: "Neue Aufgabe",
-      description: "Löse die Aufgabe 2.1",
+      text: "Löse die Aufgabe 2.1",
       link: "/app/courses/rechnernetze",
       createdAt: new Date(Date.parse("04 Jan 2025 00:12:00 GMT")),
       read: true,
     },
   ];
 
-  interface CoursesSearchResult {
-    id: number;
-    name: string;
-    link: string;
-  }
+  async function fetchSearchResults(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.value === "") {
+      setSearchResults({
+        courses: [],
+        videos: [],
+      });
+      setShowSearchResults(false);
+      return;
+    }
+    const res = await request(`api/user/search?search=${e.target.value}`, {});
 
-  interface VideosSearchResult {
-    id: number;
-    name: string;
-    course: string;
-    link: string;
+    if (res.error) {
+      console.error(res.error);
+    } else {
+      setSearchResults(res);
+      setShowSearchResults(true);
+    }
   }
-
-  const searchResults: {
-    courses: CoursesSearchResult[];
-    videos: VideosSearchResult[];
-  } = {
-    courses: [
-      {
-        id: 1,
-        name: "Rechnernetze",
-        link: "/app/courses/rechnernetze",
-      },
-      {
-        id: 2,
-        name: "Rechnernetze",
-        link: "/app/courses/rechnernetze",
-      },
-      {
-        id: 3,
-        name: "Rechnernetze",
-        link: "/app/courses/rechnernetze",
-      },
-      {
-        id: 4,
-        name: "Rechnernetze",
-        link: "/app/courses/rechnernetze",
-      },
-      {
-        id: 5,
-        name: "Rechnernetze",
-        link: "/app/courses/rechnernetze",
-      },
-    ],
-    videos: [
-      {
-        id: 1,
-        name: "Video 1",
-        course: "Rechnernetze",
-        link: "/app/courses/rechnernetze",
-      },
-      {
-        id: 2,
-        name: "Video 1",
-        course: "Rechnernetze",
-        link: "/app/courses/rechnernetze",
-      },
-      {
-        id: 3,
-        name: "Video 1",
-        course: "Rechnernetze",
-        link: "/app/courses/rechnernetze",
-      },
-      {
-        id: 4,
-        name: "Video 1",
-        course: "Rechnernetze",
-        link: "/app/courses/rechnernetze",
-      },
-    ],
-  };
 
   return (
     <div className="min-h-screen relative">
@@ -153,12 +129,10 @@ export default function AppLayout() {
                     className="outline-none rounded-full py-2 pl-4"
                     type="text"
                     placeholder="Suche..."
+                    onChange={fetchSearchResults}
                   />
                 </div>
-                <div
-                  className="grid place-content-center bg-bg-200 border-r border-y border-border-100 px-4 rounded-r-full cursor-pointer"
-                  onClick={() => setShowSearchResults(!showSearchResults)}
-                >
+                <div className="grid place-content-center bg-bg-200 border-r border-y border-border-100 px-4 rounded-r-full cursor-pointer">
                   <SearchIcon />
                 </div>
                 {showSearchResults && (
@@ -202,6 +176,7 @@ export default function AppLayout() {
             <div className="px-3 mt-4 grid gap-5">
               {notifications.map((notification) => (
                 <a
+                  key={notification._id}
                   href={notification.link}
                   className={`flex gap-2 group ${notification.read ? "opacity-60" : ""}`}
                 >
@@ -212,7 +187,7 @@ export default function AppLayout() {
                     <p className="font-medium md:text-lg group-hover:underline">
                       {notification.title}
                     </p>
-                    <p className="text-sm mb-2">{notification.description}</p>
+                    <p className="text-sm mb-2">{notification.text}</p>
                     <p className="text-xs text-gray">
                       {formatDate(notification.createdAt)}
                     </p>

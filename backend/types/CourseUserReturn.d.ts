@@ -5,6 +5,7 @@ export interface ICourseUserReturn {
   name: string;
   slug: string;
   description: string;
+  emoji: string;
   collaborators: { username: string; role: string }[];
   languages: string[];
   creator: {

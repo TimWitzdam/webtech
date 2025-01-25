@@ -17,7 +17,12 @@ export default function Course(props: Props) {
       className="rounded-xl border border-border-100 hover:border-border-200 transition-colors"
     >
       <div className="py-6 rounded-t-xl bg-bg-300 grid place-content-center relative">
-        <img src={props.image} alt={props.name} className="object-cover" />
+        <img
+          src={props.image}
+          alt={props.name}
+          className="object-cover h-[99px]"
+          height={99}
+        />
         <div className="absolute -bottom-7 left-0 p-4 bg-white rounded-r-xl">
           <p className="text-4xl">{props.emoji}</p>
         </div>

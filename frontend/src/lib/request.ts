@@ -11,6 +11,9 @@ export default async function request(url: string, options: RequestInit = {}) {
   if (!res.ok) {
     if (res.status === 500) {
       return { error: "Unbekannter Fehler" };
+    } else if (res.status === 401) {
+      document.cookie =
+        "auth_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     } else {
       return await res.json();
     }

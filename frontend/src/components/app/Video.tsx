@@ -1,4 +1,5 @@
 import { formatDate } from "../../lib/formatDate";
+import CheckMark from "../icons/CheckMark";
 
 type Props = {
   link: string;
@@ -6,10 +7,16 @@ type Props = {
   title: string;
   course: { name: string; emoji: string };
   addedAt: Date;
-  duration: string;
+  duration: number;
+  watched: boolean;
 };
 
 export default function Video(props: Props) {
+  const duration = new Date(props.duration);
+  const minutes = duration.getUTCMinutes();
+  const seconds = duration.getUTCSeconds();
+  const formattedDuration = `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+
   return (
     <a href={props.link} className="group">
       <div className="relative group">
@@ -20,8 +27,13 @@ export default function Video(props: Props) {
           height={220}
         />
         <div className="absolute bottom-0 right-0 mr-2 mb-2 text-white text-sm bg-[#5C5C5C] bg-opacity-40 backdrop-blur-sm rounded-full px-3 py-2">
-          {props.duration}
+          {formattedDuration}
         </div>
+        {props.watched && (
+          <div className="absolute top-0 right-0 mr-2 mt-2 text-white text-sm bg-green bg-opacity-40 backdrop-blur-sm rounded-full w-8 h-8 grid place-content-center">
+            <CheckMark size={15} />
+          </div>
+        )}
       </div>
       <div className="flex gap-2">
         <div className="w-10 h-10 rounded-full grid place-content-center bg-bg-300">

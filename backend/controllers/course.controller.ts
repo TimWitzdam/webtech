@@ -126,7 +126,7 @@ export class CourseController {
     }
     const coursePath = `${FILE_PATH}/images/${courseId}`;
     if (!fs.existsSync(coursePath)) {
-      res.status(404).json({ status: "Video nicht gefunden!" });
+      res.status(404).json({ status: "Kurs nicht gefunden!" });
       return;
     }
 

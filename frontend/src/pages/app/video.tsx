@@ -6,8 +6,9 @@ import CheckMark from "../../components/icons/CheckMark";
 import SavedIcon from "../../components/icons/SavedIcon";
 import CommentIcon from "../../components/icons/CommentIcon";
 import BaseButton from "../../components/BaseButton";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Comment from "../../components/app/Comment";
+import request from "../../lib/request";
 
 export default function VideoPage() {
   const { videoID } = useParams();
@@ -16,16 +17,33 @@ export default function VideoPage() {
   const [showAnswersIds, setShowAnswersIds] = useState<number[]>([]);
   const [answerModal, setAnswerModal] = useState<number | null>(null);
   const [reportModal, setReportModal] = useState<number | null>(null);
+  const [videoComments, setVideoComments] = useState([]);
+  const [videoInformation, setVideoInformation] = useState([]);
 
-  const video = {
-    name: "Putting bits on the wire",
-    uploaded: new Date(),
-    course: {
-      name: "Rechnernetze",
-      emoji: "🌐",
-      slug: "rechnernetze",
-    },
-  };
+  useEffect(() => {
+    async function fetchComments() {
+      const res = await request(`api/video/${videoID}/comments`);
+
+      if (res.error) {
+        console.error(res.error);
+      } else {
+        setVideoComments(res);
+      }
+    }
+
+    async function fetchVideoInformation() {
+      const res = await request(`api/video/${videoID}/information`);
+
+      if (res.error) {
+        console.error(res.error);
+      } else {
+        setVideoInformation(res.information);
+      }
+    }
+
+    fetchComments();
+    fetchVideoInformation();
+  }, []);
 
   const comments = [
     {
@@ -90,12 +108,18 @@ export default function VideoPage() {
     },
   ];
 
-  function markAsRead() {
-    console.log("Mark as read");
+  async function markAsRead() {
+    await request(`api/user/seen`, {
+      method: "POST",
+      body: JSON.stringify({ videoId: videoID }),
+    });
   }
 
-  function addToSaved() {
-    console.log("Add to saved");
+  async function addToSaved() {
+    await request(`api/user/watchlater`, {
+      method: "POST",
+      body: JSON.stringify({ videoId: videoID }),
+    });
   }
 
   function handleNewCommentFocus(e: React.FocusEvent<HTMLTextAreaElement>) {
@@ -148,25 +172,42 @@ export default function VideoPage() {
     console.log("Report submitted", reportModal);
   }
 
+  async function handleProgress(e: any) {
+    const progressPercentage = e.target.currentTime / e.target.duration;
+    if (progressPercentage > 0.9) {
+      await request(`api/user/seen`, {
+        method: "POST",
+        body: JSON.stringify({ videoId: videoID }),
+      });
+    }
+  }
+
   return (
     <div className="max-w-screen-3xl mx-auto 3xl:px-0">
       <div className="xl:flex">
         <div className="xl:basis-4/5">
-          <video className="w-full" controls>
-            <source src="/videos/video.mp4" type="video/mp4" />
+          <video className="w-full" controls onProgress={handleProgress}>
+            <source
+              src={`${import.meta.env.VITE_BACKEND_URL}/api/video/stream/${videoID}`}
+              type="video/mp4"
+            />
             Your browser does not support the video tag.
           </video>
           <div className="px-3 pb-4 border-b border-border-100">
-            <h1 className="text-2xl font-medium mt-5">{video.name}</h1>
+            <h1 className="text-2xl font-medium mt-5">
+              {videoInformation?.video?.title}
+            </h1>
             <span className="text-gray">
-              Hochgeladen {formatDate(video.uploaded)}
+              Hochgeladen {formatDate(videoInformation?.video?.creationDate)}
             </span>
           </div>
           <div className="px-3 grid grid-cols-3 gap-3 py-3 border-b border-border-100 xl:border-0">
             <VideoActionButton
               icon={<CoursesIcon />}
               text="Kurs ansehen"
-              onClick={() => navigate(`/app/courses/${video.course.slug}`)}
+              onClick={() =>
+                navigate(`/app/courses/${videoInformation?.course[0]?._id}`)
+              }
             />
             <VideoActionButton
               icon={<CheckMark />}
