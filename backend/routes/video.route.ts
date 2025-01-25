@@ -40,6 +40,12 @@ videoRoutes.get(
   VideoController.getInformation,
 );
 
+videoRoutes.get(
+  "/video/image/:videoId",
+  authenticateJWT,
+  VideoController.getImage,
+);
+
 videoRoutes.get("/video/:videoId", authenticateJWT, VideoController.findId);
 
 export default videoRoutes;

@@ -23,6 +23,24 @@ export class VideoController {
     return;
   }
 
+  static async getImage(req: Request, res: Response) {
+    const videoId = req.params.videoId;
+    if (!videoId || !isValidObjectId(videoId)) {
+      res.status(400).json({ status: "Keine oder falsche Kurs-ID angegeben!" });
+      return;
+    }
+    const coursePath = `${FILE_PATH}/images/${videoId}`;
+    if (!fs.existsSync(coursePath)) {
+      res.status(404).json({ status: "Video nicht gefunden!" });
+      return;
+    }
+
+    let mimeType = mime.getType(coursePath) || "image/png";
+    res.setHeader("Content-Type", mimeType);
+    res.sendFile(coursePath);
+    return;
+  }
+
   static async createComment(req: Request, res: Response) {
     const { videoId, text, timestamp } = req.body;
     const userId = res.locals.decodedJWT;
