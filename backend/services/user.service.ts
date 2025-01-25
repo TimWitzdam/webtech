@@ -8,7 +8,7 @@ import Course from "../models/course.model";
 import { ICourseUserReturn } from "../types/CourseUserReturn";
 import Saved from "../models/saved.model";
 import bcrypt from "bcryptjs";
-import Notification, { INotification } from "../models/notifications.model";
+import Notification from "../models/notifications.model";
 import { IFormattedNotification } from "../types/FormattedNotification";
 
 export class UserService {
@@ -46,17 +46,17 @@ export class UserService {
   }
 
   static async watch(
-    video_id: Schema.Types.ObjectId,
+    videoId: Schema.Types.ObjectId,
     user_id: Schema.Types.ObjectId,
     progress: number,
   ): Promise<Schema.Types.ObjectId | undefined> {
-    const video = await Video.findById(video_id);
+    const video = await Video.findById(videoId);
     const user = await User.findById(user_id);
     if (!video || !user) {
       return undefined;
     }
 
-    const userVideo = await UserVideo.find({ video_id, user_id });
+    const userVideo = await UserVideo.find({ videoId, user_id });
     if (!userVideo || userVideo.length > 1) {
       return undefined;
     }
@@ -76,10 +76,10 @@ export class UserService {
 
     const formatProgress = progress < video.length ? progress : video.length;
     const userVideoList = new UserVideo({
-      video_id,
+      videoId,
       user_id,
       progress: formatProgress,
-      last_seen: new Date(),
+      lastSeen: new Date(),
     });
     const savedUserVideo = await userVideoList.save();
     return savedUserVideo === userVideoList
@@ -96,16 +96,16 @@ export class UserService {
     if (!latestVideoDocuments) return undefined;
 
     const videoPromises = latestVideoDocuments.map(async (userVideoList) => {
-      let video = await Video.findById(userVideoList.video_id);
+      let video = await Video.findById(userVideoList.videoId);
       if (video) {
         let tmp = {
           video: {
             _id: video._id as Schema.Types.ObjectId,
             title: video.title,
             length: video.length,
-            creation_date: video.creation_date,
+            creationDate: video.creationDate,
           },
-          last_seen: userVideoList.last_seen,
+          lastSeen: userVideoList.lastSeen,
           progress: userVideoList.progress,
         };
         return tmp;
@@ -132,20 +132,43 @@ export class UserService {
     const courseDocumentPromises = userCourseDocuments.map(
       async (courseDocuments) => {
         if (courseDocuments) {
-          const course = await Course.findById(courseDocuments.course_id);
+          const course = await Course.findById(courseDocuments.courseId);
           if (!course) return null;
-          const creator = await User.findById(course.creator_id);
+          const creator = await User.findById(course.creatorId);
           if (!creator) return null;
+
+          const collaboratorPromises = course.collaboratorIds.map(
+            async (collaborator) => {
+              const user = await User.findById(collaborator);
+              if (!user) return undefined;
+              return {
+                username: user.username,
+                role: user.role,
+              };
+            },
+          );
+
+          const collaboratorResolved = await Promise.all(collaboratorPromises);
+          const collaboratorResults = collaboratorResolved.filter(
+            (
+              collaborator,
+            ): collaborator is { username: string; role: string } =>
+              collaborator !== null,
+          );
 
           return {
             _id: course._id as Schema.Types.ObjectId,
             name: course.name,
             slug: course.slug,
+            description: course.description,
+            languages: course.languages || [],
+            collaborators: collaboratorResults || [],
             creator: {
-              username: creator.username,
+              name: creator.username,
               role: creator.role,
             },
-            creation_date: course.creation_date,
+            creationDate: course.creationDate,
+            lastChanged: course.lastChanged,
           };
         }
         return null;
@@ -164,9 +187,9 @@ export class UserService {
 
   static async saveVideo(
     user_id: Schema.Types.ObjectId,
-    video_id: Schema.Types.ObjectId,
+    videoId: Schema.Types.ObjectId,
   ): Promise<Schema.Types.ObjectId | undefined> {
-    const newSavedVideo = new Saved({ user_id, video_id });
+    const newSavedVideo = new Saved({ user_id, videoId });
     const savedVideo = await newSavedVideo.save();
     return savedVideo ? (savedVideo._id as Schema.Types.ObjectId) : undefined;
   }
@@ -178,13 +201,13 @@ export class UserService {
     if (!savedVideoDocuments) return undefined;
 
     const savedVideoPromises = savedVideoDocuments.map(async (saved) => {
-      const video = await Video.findById(saved.video_id);
+      const video = await Video.findById(saved.videoId);
       if (!video) return null;
       return {
         _id: video._id,
         title: video.title,
         length: video.length,
-        creation_date: video.creation_date,
+        creationDate: video.creationDate,
       };
     });
 
@@ -251,10 +274,10 @@ export class UserService {
 
   static async markAsSeen(
     user_id: Schema.Types.ObjectId,
-    video_id: Schema.Types.ObjectId,
+    videoId: Schema.Types.ObjectId,
   ): Promise<Schema.Types.ObjectId | undefined> {
     const userVideoList = await UserVideo.find({
-      $and: [{ user_id: user_id }, { video_id: video_id }],
+      $and: [{ user_id: user_id }, { videoId: videoId }],
     });
 
     if (!userVideoList) {
@@ -276,10 +299,10 @@ export class UserService {
 
   static async checkIfSeen(
     user_id: Schema.Types.ObjectId,
-    video_id: string,
+    videoId: string,
   ): Promise<boolean | undefined> {
     const userVideoList = await UserVideo.find({
-      $and: [{ user_id: user_id }, { video_id: video_id }],
+      $and: [{ user_id: user_id }, { videoId: videoId }],
     });
 
     if (!userVideoList) {

@@ -8,5 +8,5 @@ export interface IVideoFind {
     username: string;
     role: string;
   };
-  creation_date: Date;
+  creationDate: Date;
 }

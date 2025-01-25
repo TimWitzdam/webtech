@@ -207,7 +207,7 @@ export class UserController {
       return;
     }
     const videos = await VideoService.find(search.toString());
-    const courses = await CourseService.find(search.toString());
+    const courses = await CourseService.findByName(search.toString());
     if (!videos || !courses) {
       res.status(404).json({ status: ERROR_MESSAGE });
       return;

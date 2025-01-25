@@ -4,9 +4,13 @@ export interface ICourseUserReturn {
   _id: Schema.Types.ObjectId;
   name: string;
   slug: string;
+  description: string;
+  collaborators: { username: string; role: string }[];
+  languages: string[];
   creator: {
-    username: string;
+    name: string;
     role: string;
   };
-  creation_date: Date;
+  creationDate: Date;
+  lastChanged: Date;
 }

@@ -1,7 +1,7 @@
 import { Schema, model, Document } from "mongoose";
 
 export interface INotification extends Document {
-  user_id: Schema.Types.ObjectId;
+  userId: Schema.Types.ObjectId;
   title: string;
   text: string;
   link: string;
@@ -10,7 +10,7 @@ export interface INotification extends Document {
 }
 
 const notificationSchema = new Schema<INotification>({
-  user_id: { type: Schema.Types.ObjectId, required: true },
+  userId: { type: Schema.Types.ObjectId, required: true },
   title: { type: String, required: true },
   text: { type: String, required: true },
   link: { type: String, required: true },

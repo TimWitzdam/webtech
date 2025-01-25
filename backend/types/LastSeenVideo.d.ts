@@ -7,8 +7,8 @@ export interface ILastSeenVideo {
     slug: string;
     url: string;
     length: number;
-    creation_date: Date;
+    creationDate: Date;
   };
-  last_seen: Date;
+  lastSeen: Date;
   progress: number;
 }

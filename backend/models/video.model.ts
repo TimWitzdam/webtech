@@ -4,13 +4,13 @@ export interface IVideo extends Document {
   title: string;
   length: number;
   uploaderId: Schema.Types.ObjectId;
-  creation_date: Date;
+  creationDate: Date;
 }
 
 const videoSchema = new Schema<IVideo>({
   title: { type: String, required: true },
   length: { type: Number, required: true },
-  creation_date: { type: Date, required: true, default: new Date() },
+  creationDate: { type: Date, required: true, default: new Date() },
   uploaderId: { type: Schema.Types.ObjectId, required: true },
 });
 

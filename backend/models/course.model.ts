@@ -3,15 +3,27 @@ import { Schema, model, Document } from "mongoose";
 export interface ICourse extends Document {
   name: string;
   slug: string;
-  creator_id: Schema.Types.ObjectId;
-  creation_date: Date;
+  creatorId: Schema.Types.ObjectId;
+  collaboratorIds: Schema.Types.ObjectId[];
+  description: string;
+  languages: string[];
+  creationDate: Date;
+  lastChanged: Date;
 }
 
 const courseSchema = new Schema<ICourse>({
   name: { type: String, required: true },
   slug: { type: String, required: true, unique: true },
-  creator_id: { type: Schema.Types.ObjectId, required: true },
-  creation_date: { type: Date, required: true, default: new Date() },
+  description: { type: String },
+  creatorId: { type: Schema.Types.ObjectId, required: true },
+  collaboratorIds: [
+    {
+      type: Schema.Types.ObjectId,
+    },
+  ],
+  languages: [{ type: String }],
+  lastChanged: { type: Date, required: true, default: new Date() },
+  creationDate: { type: Date, required: true, default: new Date() },
 });
 
 const Course = model<ICourse>("Course", courseSchema);

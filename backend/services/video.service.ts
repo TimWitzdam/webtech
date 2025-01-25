@@ -3,10 +3,9 @@ import Video, { IVideo } from "../models/video.model";
 import Comment from "../models/comment.model";
 import VideoComment from "../models/video-comment.model";
 import User from "../models/user.model";
-import { IVideoComment } from "../types/VideoComment";
 import { UserService } from "./user.service";
 import { IVideoFind } from "../types/VideoFind";
-import Course, { ICourse } from "../models/course.model";
+import Course from "../models/course.model";
 import CourseVideo from "../models/course-video.model";
 import { ICourseInformation } from "../types/CourseInformation";
 import { IFormattedComment } from "../types/FormattedComment";
@@ -19,7 +18,7 @@ export class VideoService {
     const video = new Video({
       title,
       length,
-      creation_date: new Date(),
+      creationId: new Date(),
     });
     const saved_video = await video.save();
     return saved_video === video
@@ -105,13 +104,13 @@ export class VideoService {
       if (!courseVideo) return undefined;
       const course = await Course.findById(courseVideo.courseId);
       if (!course) return undefined;
-      const user = await User.findById(course.creator_id);
+      const user = await User.findById(course.creatorId);
       if (!user) return undefined;
       return {
         _id: course._id,
         name: course.name,
         slug: course.slug,
-        creation_date: course.creation_date,
+        creationDate: course.creationDate,
         creator: {
           username: user.username,
           role: user.role,
@@ -140,7 +139,7 @@ export class VideoService {
           username: creator.username,
           role: creator.role,
         },
-        creation_date: video.creation_date,
+        creationDate: video.creationDate,
       };
     });
     const resolvedVideos = await Promise.all(videoPromises);

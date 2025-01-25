@@ -140,7 +140,7 @@ export class VideoController {
       _id: video._id,
       title: video.title,
       length: video.length,
-      creation_date: video.creation_date,
+      creation_date: video.creationDate,
       uploader: {
         username: user.username,
         role: user.role,

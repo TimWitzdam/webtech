@@ -14,8 +14,15 @@ export class CourseController {
 
   static async create(req: Request, res: Response) {
     const user_id = res.locals.decodedJWT;
-    const { name, slug } = req.body;
-    let new_course = await CourseService.create(name, slug, user_id);
+    const { name, slug, description, collaboratorIds, languages } = req.body;
+    let new_course = await CourseService.create(
+      name,
+      slug,
+      description,
+      user_id,
+      collaboratorIds,
+      languages,
+    );
     if (!new_course) {
       res.status(403).json({ error: "Konnte Kurs nicht erstellen!" });
       return;
