@@ -1,17 +1,13 @@
 import { Request, Response } from "express";
 import { CourseService } from "../services/course.service";
 import { isValidObjectId } from "mongoose";
+const { ObjectId } = require("mongoose").mongo;
+
 import { FILE_PATH, ROLES } from "../configs/app.config";
 import * as fs from "fs";
 import mime from "mime";
 
 export class CourseController {
-  static async getAll(req: Request, res: Response) {
-    const courses = await CourseService.getAll();
-    res.json({ courses });
-    return;
-  }
-
   static async create(req: Request, res: Response) {
     const user_id = res.locals.decodedJWT;
     const { name, slug, description, collaboratorIds, languages } = req.body;
@@ -28,6 +24,23 @@ export class CourseController {
       return;
     }
     res.json({ course: new_course.toString() });
+    return;
+  }
+
+  static async courseInformations(req: Request, res: Response) {
+    const courseId = req.params.courseId;
+    if (!isValidObjectId(courseId)) return undefined;
+
+    const information = await CourseService.findById(new ObjectId(courseId));
+    const courseVideos = await CourseService.getCourseVideos(
+      new ObjectId(courseId),
+    );
+    res.json({
+      course: {
+        ...information,
+        videos: courseVideos,
+      },
+    });
     return;
   }
 

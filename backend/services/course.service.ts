@@ -6,6 +6,7 @@ import User from "../models/user.model";
 import CourseUser from "../models/course-user.model";
 import { ICourseFind } from "../types/CourseFind";
 import { UserService } from "./user.service";
+import { IVideoFind } from "../types/VideoFind";
 
 export class CourseService {
   static async create(
@@ -28,15 +29,32 @@ export class CourseService {
     return savedCourse === course ? (savedCourse._id as ObjectId) : undefined;
   }
 
-  static async getAll(): Promise<Schema.Types.ObjectId[] | undefined> {
-    const courses = await Course.find({});
-    let courseIds: Schema.Types.ObjectId[] = [];
+  static async getCourseVideos(
+    courseId: Schema.Types.ObjectId,
+  ): Promise<IVideoFind[] | undefined> {
+    const courseVideos = await CourseVideo.find({ courseId });
 
-    courses.forEach((course) => {
-      courseIds.push(course._id as Schema.Types.ObjectId);
+    const videoPromises = courseVideos.map(async (courseVideo) => {
+      const video = await Video.findById(courseVideo.videoId);
+      if (!video) return undefined;
+      const creator = await UserService.getInformation(video.uploaderId);
+      if (!creator) return undefined;
+      return {
+        _id: video._id,
+        title: video.title,
+        length: video.length,
+        uploader: {
+          username: creator.username,
+          role: creator.role,
+        },
+        creationDate: video.creationDate,
+      };
     });
-
-    return courseIds;
+    const resolvedVideos = await Promise.all(videoPromises);
+    const videoResults = resolvedVideos.filter(
+      (videos): videos is IVideoFind => videos !== null,
+    );
+    return videoResults;
   }
 
   static async add(

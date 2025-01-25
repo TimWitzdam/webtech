@@ -8,9 +8,6 @@ import { courseJoinRequest } from "../models/course.join.request";
 
 const courseRoutes = express.Router();
 
-// Get all existing courses
-courseRoutes.get("/course/all", authenticateJWT, CourseController.getAll);
-
 // Create new course
 courseRoutes.post(
   "/course/create",
@@ -35,7 +32,17 @@ courseRoutes.post(
   CourseController.join,
 );
 
-courseRoutes.get("/course/:slug", authenticateJWT, CourseController.findBySlug);
+courseRoutes.get(
+  "/course/find/:slug",
+  authenticateJWT,
+  CourseController.findBySlug,
+);
+
+courseRoutes.get(
+  "/course/:courseId",
+  authenticateJWT,
+  CourseController.courseInformations,
+);
 
 courseRoutes.get(
   "/course/image/:course_id",
