@@ -14,6 +14,7 @@ import WatchLater from "../models/watch-later.model";
 import { IVideoFind } from "../types/VideoFind";
 import CourseVideo from "../models/course-video.model";
 import { CourseService } from "./course.service";
+import { ISavedVideo } from "../types/SavedVideo";
 
 const { ObjectId } = require("mongoose").mongo;
 
@@ -245,7 +246,7 @@ export class UserService {
 
   static async getSavedVideos(
     userId: Schema.Types.ObjectId,
-  ): Promise<ILastSeenVideo[] | null> {
+  ): Promise<ISavedVideo[] | null> {
     const savedVideoDocuments = await Saved.find({ userId });
     if (!savedVideoDocuments) return null;
 
@@ -286,6 +287,10 @@ export class UserService {
       if (!userVideo) {
         return null;
       }
+      const seen = await this.checkIfSeen(userId, saved.videoId.toString());
+      if (!seen) {
+        return null;
+      }
 
       return {
         video: {
@@ -297,12 +302,13 @@ export class UserService {
         lastSeen: userVideo[0].lastSeen,
         progress: (userVideo[0].progress / video.length) * 100,
         foundIn: courseResults,
+        seen: seen ? seen : false,
       };
     });
 
     const savedVideoResults = await Promise.all(savedVideoPromises);
     const result = savedVideoResults.filter(
-      (video): video is ILastSeenVideo => video !== null,
+      (video): video is ISavedVideo => video !== null,
     );
 
     return result ? result : null;
