@@ -122,6 +122,7 @@ export class VideoController {
       res
         .status(400)
         .json({ status: "Keine oder falsche Video-ID angegeben!" });
+      return;
     }
 
     const video = await VideoService.getInformation(videoId);
