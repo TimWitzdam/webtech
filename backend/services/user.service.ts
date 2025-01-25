@@ -12,7 +12,6 @@ import Notification from "../models/notifications.model";
 import { IFormattedNotification } from "../types/FormattedNotification";
 import WatchLater from "../models/watch-later.model";
 import { IVideoFind } from "../types/VideoFind";
-import { VideoService } from "./video.service";
 
 export class UserService {
   static async createUser(

@@ -5,6 +5,7 @@ import { courseCreateRequest } from "../models/course.create.request";
 import { authenticateJWT } from "../middlewares/authenticateJWT.middleware";
 import { courseAddRequest } from "../models/course.add.request";
 import { courseJoinRequest } from "../models/course.join.request";
+import { memberOfCourse } from "../middlewares/memberOfCourse.middleware";
 
 const courseRoutes = express.Router();
 
@@ -41,12 +42,14 @@ courseRoutes.get(
 courseRoutes.get(
   "/course/:courseId",
   authenticateJWT,
+  memberOfCourse(),
   CourseController.courseInformations,
 );
 
 courseRoutes.get(
   "/course/image/:courseId",
   authenticateJWT,
+  memberOfCourse(),
   CourseController.getImage,
 );
 
