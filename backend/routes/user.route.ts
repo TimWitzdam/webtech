@@ -43,6 +43,13 @@ userRoutes.post("/user/seen", authenticateJWT, UserController.seen);
 // Videos the user recently viewed
 userRoutes.get("/user/lastseen", authenticateJWT, UserController.lastSeen);
 
+userRoutes.get("/user/watchlater", authenticateJWT, UserController.watchLater);
+userRoutes.post(
+  "/user/watchlater",
+  authenticateJWT,
+  UserController.addToWatchLater,
+);
+
 // Get user related courses
 userRoutes.get("/user/courses", authenticateJWT, UserController.getCourses);
 

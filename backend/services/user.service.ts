@@ -10,6 +10,9 @@ import Saved from "../models/saved.model";
 import bcrypt from "bcryptjs";
 import Notification from "../models/notifications.model";
 import { IFormattedNotification } from "../types/FormattedNotification";
+import WatchLater from "../models/watch-later.model";
+import { IVideoFind } from "../types/VideoFind";
+import { VideoService } from "./video.service";
 
 export class UserService {
   static async createUser(
@@ -321,5 +324,49 @@ export class UserService {
     }
 
     return userVideo.seen;
+  }
+
+  static async addToWatchLater(
+    userId: Schema.Types.ObjectId,
+    videoId: Schema.Types.ObjectId,
+  ): Promise<Schema.Types.ObjectId | undefined> {
+    const watchLaterList = await WatchLater.find({ userId, videoId });
+    if (watchLaterList.length > 0) return undefined;
+
+    const watchLaterDocument = new WatchLater({ userId, videoId });
+    const watchLaterResult = await watchLaterDocument.save();
+    if (!watchLaterResult) {
+      return undefined;
+    }
+    return watchLaterResult._id as Schema.Types.ObjectId;
+  }
+
+  static async getWatchLater(
+    userId: Schema.Types.ObjectId,
+  ): Promise<IVideoFind[] | undefined> {
+    const watchLaterDocuments = await WatchLater.find({ userId: userId });
+    if (!watchLaterDocuments) return undefined;
+    const videoPromises = watchLaterDocuments.map(async (document) => {
+      const video = await Video.findById(document.videoId);
+      if (!video) return undefined;
+      const creator = await UserService.getInformation(video.uploaderId);
+      if (!creator) return undefined;
+      return {
+        _id: video._id,
+        title: video.title,
+        length: video.length,
+        uploader: {
+          username: creator.username,
+          role: creator.role,
+        },
+        creationDate: video.creationDate,
+      };
+    });
+    const resolvedVideos = await Promise.all(videoPromises);
+    const videoResults = resolvedVideos.filter(
+      (videos): videos is IVideoFind => videos !== null,
+    );
+
+    return videoResults ? videoResults : undefined;
   }
 }

@@ -110,6 +110,32 @@ export class UserController {
     return;
   }
 
+  static async watchLater(req: Request, res: Response) {
+    const userId = res.locals.decodedJWT;
+    const results = await UserService.getWatchLater(userId);
+    if (!results) {
+      res.status(500).json({ ERROR_MESSAGE });
+    }
+    res.json({ videos: results });
+  }
+
+  static async addToWatchLater(req: Request, res: Response) {
+    const userId = res.locals.decodedJWT;
+    const { videoId } = req.body;
+    if (!isValidObjectId(videoId)) {
+      res
+        .status(400)
+        .json({ status: "Keine oder falsche Video-ID angegeben!" });
+      return;
+    }
+    const result = await UserService.addToWatchLater(userId, videoId);
+    if (!result) {
+      res.status(500).json({ status: ERROR_MESSAGE });
+      return;
+    }
+    res.json({ status: result });
+  }
+
   static async getCourses(req: Request, res: Response) {
     const userId = res.locals.decodedJWT;
     const userCourses = await UserService.getUserCourses(userId);
