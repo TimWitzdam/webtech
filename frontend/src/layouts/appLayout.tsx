@@ -12,6 +12,7 @@ import FilledBellIcon from "../components/icons/FilledBellIcon";
 import { formatDate } from "../lib/formatDate";
 import SearchMenu from "../components/app/SearchMenu";
 import request from "../lib/request";
+import Notification from "../types/Notification";
 
 export default function AppLayout() {
   const [showNotifications, setShowNotifications] = React.useState(false);
@@ -41,34 +42,6 @@ export default function AppLayout() {
       setShowNotifications(false);
     }
   }
-
-  interface Notification {
-    _id: string;
-    title: string;
-    text: string;
-    link: string;
-    createdAt: Date;
-    read: boolean;
-  }
-
-  const notificationsI = [
-    {
-      _id: 1,
-      title: "Neue Aufgabe",
-      text: "Löse die Aufgabe 2.1",
-      link: "/app/courses/rechnernetze",
-      createdAt: new Date(Date.parse("04 Jan 2025 00:12:00 GMT")),
-      read: false,
-    },
-    {
-      _id: 2,
-      title: "Neue Aufgabe",
-      text: "Löse die Aufgabe 2.1",
-      link: "/app/courses/rechnernetze",
-      createdAt: new Date(Date.parse("04 Jan 2025 00:12:00 GMT")),
-      read: true,
-    },
-  ];
 
   async function fetchSearchResults(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.value === "") {

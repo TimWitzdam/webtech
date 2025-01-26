@@ -6,16 +6,17 @@ type Props = {
   image: string;
   title: string;
   course: { name: string; emoji: string };
-  addedAt: Date;
+  addedAt: string;
   duration: number;
   watched: boolean;
 };
 
 export default function Video(props: Props) {
   const duration = new Date(props.duration);
+  const hours = duration.getUTCHours();
   const minutes = duration.getUTCMinutes();
   const seconds = duration.getUTCSeconds();
-  const formattedDuration = `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+  const formattedDuration = `${hours}:${minutes < 10 ? "0" : ""}${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
 
   return (
     <a href={props.link} className="group">

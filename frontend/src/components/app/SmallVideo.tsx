@@ -9,6 +9,7 @@ type Props = {
 };
 
 export default function SmallVideo(props: Props) {
+  const formattedProgress = props.progress.toFixed(0);
   return (
     <a href={props.link} className="block rounded-xl relative h-[295px]">
       <img
@@ -29,7 +30,7 @@ export default function SmallVideo(props: Props) {
           size={20}
           strokeWidth={3}
         />
-        <span>{props.progress}%</span>
+        <span>{formattedProgress}%</span>
       </div>
     </a>
   );

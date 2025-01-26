@@ -1,4 +1,4 @@
-export function formatDate(date: Date) {
+export function formatDate(date: string) {
   const now = new Date().getTime();
   const then = new Date(date);
   const diffInSeconds = Math.floor((now - then.getTime()) / 1000);

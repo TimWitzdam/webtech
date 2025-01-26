@@ -87,6 +87,7 @@ export class UserService {
       userId,
       progress: formatProgress,
       lastSeen: new Date(),
+      seen: false,
     });
     const savedUserVideo = await userVideoList.save();
     return savedUserVideo === userVideoList
@@ -240,6 +241,12 @@ export class UserService {
     userId: Schema.Types.ObjectId,
     videoId: Schema.Types.ObjectId,
   ): Promise<Schema.Types.ObjectId | null> {
+    const alreadySaved = await Saved.find({ userId, videoId });
+    if (alreadySaved.length > 0) {
+      const result = await Saved.deleteOne({ userId, videoId });
+      return result;
+    }
+
     const newSavedVideo = new Saved({ userId, videoId });
     const savedVideo = await newSavedVideo.save();
     return savedVideo ? (savedVideo._id as Schema.Types.ObjectId) : null;
@@ -291,9 +298,6 @@ export class UserService {
         return null;
       }
       const seen = await this.checkIfSeen(userId, saved.videoId.toString());
-      if (!seen) {
-        return null;
-      }
 
       return {
         video: {

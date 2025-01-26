@@ -5,14 +5,12 @@ import PlayIcon from "../icons/PlayIcon";
 interface CoursesSearchResult {
   _id: string;
   name: string;
-  slug: string;
 }
 
 interface VideosSearchResult {
   _id: string;
   title: string;
   course: string;
-  link: string;
 }
 
 type Props = {
@@ -54,7 +52,7 @@ export default function SearchMenu(props: Props) {
             {props.searchResults.courses.map((course, index) => (
               <a
                 key={course._id}
-                href={`/app/courses/${course.slug}`}
+                href={`/app/courses/${course._id}`}
                 className={`px-3 flex gap-2 py-4 hover:bg-bg-300 ${index + 1 === props.searchResults.courses.length && props.searchResults.videos.length === 0 && "lg:rounded-b-xl"}`}
               >
                 <div className="text-primary">
@@ -73,7 +71,7 @@ export default function SearchMenu(props: Props) {
             {props.searchResults.videos.map((video, index) => (
               <a
                 key={video._id}
-                href={video.link}
+                href={`/app/videos/${video._id}`}
                 className={`px-3 flex gap-2 py-4 hover:bg-bg-300 ${index + 1 === props.searchResults.videos.length && "lg:rounded-b-xl"}`}
               >
                 <PlayIcon size={16} />

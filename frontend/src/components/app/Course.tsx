@@ -6,7 +6,7 @@ type Props = {
   link: string;
   image: string;
   emoji: string;
-  lastChanged: Date;
+  lastChanged: string;
   progress: { current: number; total: number };
 };
 

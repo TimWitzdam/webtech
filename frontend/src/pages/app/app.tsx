@@ -1,21 +1,22 @@
 import { useEffect, useState } from "react";
-import Course from "../../components/app/Course";
 import DashboardSection from "../../components/app/DashboardSection";
 import SmallVideo from "../../components/app/SmallVideo";
 import Video from "../../components/app/Video";
 import CalendarIcon from "../../components/icons/CalendarIcon";
 import PlayIcon from "../../components/icons/PlayIcon";
 import request from "../../lib/request";
+import UserInformation from "../../types/UserInformation";
+import CourseType from "../../types/Course";
+import VideoData from "../../types/VideoData";
+import Course from "../../components/app/Course";
+import AppLoadingIndicator from "../../components/app/LoadingIndicators/AppLoadingIndicator";
 
 export default function AppPage() {
-  const [userInformation, setUserInformation] = useState<{
-    username: string;
-    realName: string;
-    role: string;
-  } | null>(null);
-  const [userCourses, setUserCourses] = useState(null);
-  const [lastSeen, setLastSeen] = useState(null);
-  const [saved, setSaved] = useState(null);
+  const [userInformation, setUserInformation] =
+    useState<UserInformation | null>(null);
+  const [userCourses, setUserCourses] = useState<CourseType[] | null>(null);
+  const [lastSeen, setLastSeen] = useState<VideoData[] | null>(null);
+  const [saved, setSaved] = useState<VideoData[] | null>(null);
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -26,7 +27,7 @@ export default function AppPage() {
       if (res.error) {
         console.error(res.error);
       } else {
-        setUserCourses(res.courses);
+        setUserCourses(res.courses.slice(0, 2));
       }
     }
 
@@ -46,7 +47,7 @@ export default function AppPage() {
       if (res.error) {
         console.error(res.error);
       } else {
-        setLastSeen(res.videos);
+        setLastSeen(res.videos.slice(0, 3));
       }
     }
 
@@ -56,16 +57,14 @@ export default function AppPage() {
       if (res.error) {
         console.error(res.error);
       } else {
-        setSaved(res.videos);
+        setSaved(res.videos.slice(0, 3));
       }
     }
 
-    Promise.all([
-      fetchCourses(),
-      fetchUserInformation(),
-      fetchLastSeen(),
-      fetchSaved(),
-    ]);
+    fetchCourses();
+    fetchUserInformation();
+    fetchLastSeen();
+    fetchSaved();
   }, []);
 
   return (
@@ -88,7 +87,7 @@ export default function AppPage() {
                 image="/images/video.jpg"
                 title="Putting bits on the wire"
                 course={{ name: "Rechnernetze", emoji: "🌐" }}
-                addedAt={new Date(Date.parse("04 Jan 2025 00:12:00 GMT"))}
+                addedAt="04 Jan 2025 00:12:00 GMT"
                 duration={3000}
                 watched={false}
               />
@@ -96,71 +95,92 @@ export default function AppPage() {
           </DashboardSection>
         </div>
         <div className="md:col-span-2">
-          <DashboardSection title="Weiterschauen" icon={<PlayIcon />} link="/#">
-            <div className="p-3 grid grid-cols-2 gap-4 md:grid-cols-3">
-              {lastSeen?.map((video, index) =>
-                index + 1 < lastSeen?.length ? (
-                  <SmallVideo
-                    key={video.video._id}
-                    link={`/app/videos/${video.video._id}`}
-                    image={`${backendUrl}/api/video/image/${video.video._id}`}
-                    title={video.video.title}
-                    course={video.foundIn[0].name}
-                    progress={video.progress}
-                  />
-                ) : (
-                  <div
-                    key={video.video._id}
-                    className="col-span-2 md:col-span-1"
-                  >
-                    <SmallVideo
-                      key={video.video._id}
-                      link={`/app/videos/${video.video._id}`}
-                      image={`${backendUrl}/api/video/image/${video.video._id}`}
-                      title={video.video.title}
-                      course={video.foundIn[0].name}
-                      progress={video.progress}
-                    />
+          <DashboardSection title="Weiterschauen" icon={<PlayIcon />}>
+            {lastSeen !== null ? (
+              <div>
+                {lastSeen.length > 0 ? (
+                  <div className="p-3 grid grid-cols-2 gap-4 md:grid-cols-3">
+                    {lastSeen?.map((video, index) =>
+                      index + 1 < lastSeen?.length && lastSeen?.length === 3 ? (
+                        <SmallVideo
+                          key={video.video._id}
+                          link={`/app/videos/${video.video._id}`}
+                          image={`${backendUrl}/api/video/image/${video.video._id}`}
+                          title={video.video.title}
+                          course={video.foundIn[0].name}
+                          progress={video.progress}
+                        />
+                      ) : (
+                        <div
+                          key={video.video._id}
+                          className="col-span-2 md:col-span-1"
+                        >
+                          <SmallVideo
+                            key={video.video._id}
+                            link={`/app/videos/${video.video._id}`}
+                            image={`${backendUrl}/api/video/image/${video.video._id}`}
+                            title={video.video.title}
+                            course={video.foundIn[0].name}
+                            progress={video.progress}
+                          />
+                        </div>
+                      ),
+                    )}
                   </div>
-                ),
-              )}
-            </div>
+                ) : (
+                  <p className="p-3">Keine Videos gefunden</p>
+                )}
+              </div>
+            ) : (
+              <AppLoadingIndicator />
+            )}
           </DashboardSection>
         </div>
+
         <div className="md:col-span-2">
           <DashboardSection
             title="Später ansehen"
             icon={<PlayIcon />}
             link="/app/saved"
           >
-            <div className="p-3 grid grid-cols-2 gap-4 md:grid-cols-3">
-              {saved?.map((video, index) =>
-                index + 1 < saved?.length ? (
-                  <SmallVideo
-                    key={video.video._id}
-                    link={`/app/courses/${video.foundIn[0]._id}`}
-                    image={`${backendUrl}/api/course/image/${video.foundIn[0]._id}`}
-                    title={video.video.title}
-                    course={video.foundIn[0].name}
-                    progress={video.progress}
-                  />
-                ) : (
-                  <div
-                    key={video.video._id}
-                    className="col-span-2 md:col-span-1"
-                  >
-                    <SmallVideo
-                      key={video.video._id}
-                      link={`/app/courses/${video.foundIn[0]._id}`}
-                      image={`${backendUrl}/api/course/image/${video.foundIn[0]._id}`}
-                      title={video.video.title}
-                      course={video.foundIn[0].name}
-                      progress={video.progress}
-                    />
+            {saved !== null ? (
+              <div>
+                {saved.length > 0 ? (
+                  <div className="p-3 grid grid-cols-2 gap-4 md:grid-cols-3">
+                    {saved?.map((video, index) =>
+                      index + 1 < saved?.length && saved?.length === 3 ? (
+                        <SmallVideo
+                          key={video.video._id}
+                          link={`/app/videos/${video.video._id}`}
+                          image={` ${backendUrl}/api/video/image/${video.video._id}`}
+                          title={video.video.title}
+                          course={video.foundIn[0].name}
+                          progress={video.progress}
+                        />
+                      ) : (
+                        <div
+                          key={video.video._id}
+                          className="col-span-2 md:col-span-1"
+                        >
+                          <SmallVideo
+                            key={video.video._id}
+                            link={`/app/videos/${video.video._id}`}
+                            image={`${backendUrl}/api/video/image/${video.video._id}`}
+                            title={video.video.title}
+                            course={video.foundIn[0].name}
+                            progress={video.progress}
+                          />
+                        </div>
+                      ),
+                    )}
                   </div>
-                ),
-              )}
-            </div>
+                ) : (
+                  <p className="p-3">Du hast noch keine Videos gespeichert</p>
+                )}
+              </div>
+            ) : (
+              <AppLoadingIndicator />
+            )}
           </DashboardSection>
         </div>
         <div className="md:col-span-3">
@@ -169,19 +189,29 @@ export default function AppPage() {
             icon={<PlayIcon />}
             link="/app/courses"
           >
-            <div className="p-3 grid md:grid-cols-2 gap-4">
-              {userCourses?.map((course) => (
-                <Course
-                  key={course._id}
-                  name={course.name}
-                  image={`${backendUrl}/api/course/image/${course._id}`}
-                  link={`/app/courses/${course._id}`}
-                  emoji={course.emoji}
-                  lastChanged={course.lastChanged}
-                  progress={course.progress}
-                />
-              ))}
-            </div>
+            {userCourses !== null ? (
+              <div>
+                {userCourses.length > 0 ? (
+                  <div className="p-3 grid md:grid-cols-2 gap-4">
+                    {userCourses?.map((course) => (
+                      <Course
+                        key={course._id}
+                        name={course.name}
+                        image={`${backendUrl}/api/course/image/${course._id}`}
+                        link={`/app/courses/${course._id}`}
+                        emoji={course.emoji}
+                        lastChanged={course.lastChanged}
+                        progress={course.progress}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="p-3">Du hast noch keine Kurse</p>
+                )}
+              </div>
+            ) : (
+              <AppLoadingIndicator number={2} />
+            )}
           </DashboardSection>
         </div>
       </div>

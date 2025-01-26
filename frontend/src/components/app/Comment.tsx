@@ -10,7 +10,7 @@ type Props = {
   id: number;
   author: string;
   content: string;
-  createdAt: Date;
+  createdAt: string;
   likes: number;
   onLike: (id: number) => void;
   onAnswer: (id: number) => void;

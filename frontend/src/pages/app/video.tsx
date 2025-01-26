@@ -6,9 +6,11 @@ import CheckMark from "../../components/icons/CheckMark";
 import SavedIcon from "../../components/icons/SavedIcon";
 import CommentIcon from "../../components/icons/CommentIcon";
 import BaseButton from "../../components/BaseButton";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Comment from "../../components/app/Comment";
 import request from "../../lib/request";
+import VideoInformation from "../../types/VideoInformation";
+import VideoData from "../../types/VideoData";
 
 export default function VideoPage() {
   const { videoID } = useParams();
@@ -18,7 +20,13 @@ export default function VideoPage() {
   const [answerModal, setAnswerModal] = useState<number | null>(null);
   const [reportModal, setReportModal] = useState<number | null>(null);
   const [videoComments, setVideoComments] = useState([]);
-  const [videoInformation, setVideoInformation] = useState([]);
+  const [videoInformation, setVideoInformation] =
+    useState<VideoInformation | null>(null);
+  const [isVideoSaved, setIsVideoSaved] = useState(false);
+  const [videoStarted, setVideoStarted] = useState(false);
+  const [ignoreProgressChange, setIgnoreProgressChange] = useState(false);
+
+  const videoElement = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     async function fetchComments() {
@@ -38,11 +46,28 @@ export default function VideoPage() {
         console.error(res.error);
       } else {
         setVideoInformation(res.information);
+
+        if (videoElement.current)
+          videoElement.current.currentTime = res.information.progress / 1000;
+      }
+    }
+
+    async function fetchSaved() {
+      const res = await request(`api/user/save`);
+
+      if (res.error) {
+        console.error(res.error);
+      } else {
+        const isSaved = res.videos.find(
+          (video: VideoData) => video.video._id === videoID,
+        );
+        setIsVideoSaved(!!isSaved);
       }
     }
 
     fetchComments();
     fetchVideoInformation();
+    fetchSaved();
   }, []);
 
   const comments = [
@@ -115,18 +140,19 @@ export default function VideoPage() {
     });
   }
 
-  async function addToSaved() {
-    await request(`api/user/watchlater`, {
+  async function toggleSaved() {
+    await request(`api/user/save`, {
       method: "POST",
       body: JSON.stringify({ videoId: videoID }),
     });
+    setIsVideoSaved(!isVideoSaved);
   }
 
   function handleNewCommentFocus(e: React.FocusEvent<HTMLTextAreaElement>) {
     setShowCommentButtons(e.type === "focus");
   }
 
-  function handleNewCommentBlur(e: React.FocusEvent<HTMLTextAreaElement>) {
+  function handleNewCommentBlur() {
     setTimeout(() => {
       const clickedElement = document.activeElement;
       const buttonsContainer = document.getElementById("comment-buttons");
@@ -173,6 +199,8 @@ export default function VideoPage() {
   }
 
   async function handleProgress(e: any) {
+    setIgnoreProgressChange(!ignoreProgressChange);
+    if (!videoStarted || ignoreProgressChange) return;
     const progressPercentage = e.target.currentTime / e.target.duration;
     if (progressPercentage > 0.9) {
       await request(`api/user/seen`, {
@@ -180,155 +208,181 @@ export default function VideoPage() {
         body: JSON.stringify({ videoId: videoID }),
       });
     }
+
+    await request(`api/user/watch`, {
+      method: "POST",
+      body: JSON.stringify({
+        videoId: videoID,
+        progress: Math.floor(e.target.currentTime * 1000),
+      }),
+    });
   }
 
   return (
     <div className="max-w-screen-3xl mx-auto 3xl:px-0">
       <div className="xl:flex">
         <div className="xl:basis-4/5">
-          <video className="w-full" controls onProgress={handleProgress}>
+          <video
+            className="w-full"
+            controls
+            onProgress={handleProgress}
+            ref={videoElement}
+            onPlay={() => setVideoStarted(true)}
+          >
             <source
               src={`${import.meta.env.VITE_BACKEND_URL}/api/video/stream/${videoID}`}
               type="video/mp4"
             />
             Your browser does not support the video tag.
           </video>
-          <div className="px-3 pb-4 border-b border-border-100">
-            <h1 className="text-2xl font-medium mt-5">
-              {videoInformation?.video?.title}
-            </h1>
-            <span className="text-gray">
-              Hochgeladen {formatDate(videoInformation?.video?.creationDate)}
-            </span>
-          </div>
-          <div className="px-3 grid grid-cols-3 gap-3 py-3 border-b border-border-100 xl:border-0">
-            <VideoActionButton
-              icon={<CoursesIcon />}
-              text="Kurs ansehen"
-              onClick={() =>
-                navigate(`/app/courses/${videoInformation?.course[0]?._id}`)
-              }
-            />
-            <VideoActionButton
-              icon={<CheckMark />}
-              text="Als gesehen makieren"
-              onClick={markAsRead}
-            />
-            <VideoActionButton
-              icon={<SavedIcon />}
-              text="Für später speichern"
-              onClick={addToSaved}
-            />
-          </div>
-        </div>
-        <div>
-          <div className="xl:border-b border-border-100 px-3">
-            <div className="flex items-center gap-2 mt-5 xl:mt-3">
-              <div className="text-primary">
-                <CommentIcon />
+          {videoInformation ? (
+            <div>
+              <div className="px-3 pb-4 border-b border-border-100">
+                <h1 className="text-2xl font-medium mt-5">
+                  {videoInformation.video.title}
+                </h1>
+                <span className="text-gray">
+                  Hochgeladen {formatDate(videoInformation.video.creationDate)}
+                </span>
               </div>
-              <h2 className="text-xl font-medium">Kommentare</h2>
+              <div className="px-3 grid grid-cols-3 gap-3 py-3 border-b border-border-100 xl:border-0">
+                <VideoActionButton
+                  icon={<CoursesIcon />}
+                  text="Kurs ansehen"
+                  onClick={() =>
+                    navigate(`/app/courses/${videoInformation.course[0]._id}`)
+                  }
+                />
+                <VideoActionButton
+                  icon={<CheckMark />}
+                  text="Als gesehen makieren"
+                  onClick={markAsRead}
+                />
+                <VideoActionButton
+                  icon={<SavedIcon />}
+                  text={
+                    isVideoSaved
+                      ? "Nicht mehr speichern"
+                      : "Für später speichern"
+                  }
+                  onClick={toggleSaved}
+                />
+              </div>
             </div>
-            <textarea
-              className="border border-border-100 w-full my-3 p-3 rounded-xl outline-none resize-none focus:border-primary"
-              cols={30}
-              rows={3}
-              placeholder="Neues Kommentar verfassen..."
-              onFocus={handleNewCommentFocus}
-              onBlur={handleNewCommentBlur}
-            />
-            {showCommentButtons && (
-              <div
-                id="comment-buttons"
-                className="flex items-center gap-4 ml-auto w-fit mb-3"
-              >
-                <button onClick={handleNewCommentCancel}>Abbrechen</button>
-                <BaseButton onClick={handleNewCommentSubmit}>
-                  Kommentieren
-                </BaseButton>
+          ) : (
+            <div>Lädt</div>
+          )}
+        </div>
+        {comments ? (
+          <div>
+            <div className="xl:border-b border-border-100 px-3">
+              <div className="flex items-center gap-2 mt-5 xl:mt-3">
+                <div className="text-primary">
+                  <CommentIcon />
+                </div>
+                <h2 className="text-xl font-medium">Kommentare</h2>
               </div>
-            )}
-          </div>
-          <div className="mt-8 px-3 grid gap-10">
-            {comments.map((comment) => (
-              <div key={comment.id}>
-                <Comment
-                  id={comment.id}
-                  author={comment.author}
-                  content={comment.content}
-                  createdAt={comment.createdAt}
-                  likes={comment.likes}
-                  onLike={handleLike}
-                  onAnswer={(id) => setAnswerModal(id)}
-                  onReport={(id) => setReportModal(id)}
-                />
-                {showAnswersIds.includes(comment.id) ? (
-                  <div className="ml-10 mt-6 grid gap-6">
-                    {comment.answers.map((answer) => (
-                      <Comment
-                        key={answer.id}
-                        id={answer.id}
-                        author={answer.author}
-                        content={answer.content}
-                        createdAt={answer.createdAt}
-                        likes={answer.likes}
-                        onLike={handleLike}
-                        onAnswer={(id) => setAnswerModal(id)}
-                        onReport={(id) => setReportModal(id)}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex justify-center mt-4">
-                    <BaseButton
-                      type="rounded"
-                      onClick={() =>
-                        setShowAnswersIds([...showAnswersIds, comment.id])
-                      }
-                    >
-                      Alle Antworten anzeigen
-                    </BaseButton>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-          {answerModal !== null && (
-            <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 grid place-content-center px-3 z-50">
-              <div className="bg-white rounded-xl border border-100 p-3">
-                <textarea
-                  className="border border-border-100 w-full mb-3 p-3 rounded-xl outline-none resize-none focus:border-primary"
-                  cols={30}
-                  rows={5}
-                  placeholder="Neues Kommentar verfassen..."
-                />
+              <textarea
+                className="border border-border-100 w-full my-3 p-3 rounded-xl outline-none resize-none focus:border-primary"
+                cols={30}
+                rows={3}
+                placeholder="Neues Kommentar verfassen..."
+                onFocus={handleNewCommentFocus}
+                onBlur={handleNewCommentBlur}
+              />
+              {showCommentButtons && (
                 <div
                   id="comment-buttons"
-                  className="flex items-center gap-4 ml-auto w-fit"
+                  className="flex items-center gap-4 ml-auto w-fit mb-3"
                 >
-                  <button onClick={handleAnswerCancel}>Abbrechen</button>
-                  <BaseButton onClick={handleAnswerSubmit}>
+                  <button onClick={handleNewCommentCancel}>Abbrechen</button>
+                  <BaseButton onClick={handleNewCommentSubmit}>
                     Kommentieren
                   </BaseButton>
                 </div>
-              </div>
+              )}
             </div>
-          )}
-          {reportModal !== null && (
-            <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 grid place-content-center px-3 z-50">
-              <div className="bg-white rounded-xl border border-100 p-3">
-                <p className="mb-4">
-                  Bist du sicher, dass du diesen Kommentar melden möchtest?
-                </p>
-                <div className="flex items-center gap-4 ml-auto w-fit">
-                  <button onClick={handleReportCancel}>Abbrechen</button>
-                  <BaseButton onClick={handleReportSubmit}>Melden</BaseButton>
+            <div className="mt-8 px-3 grid gap-10">
+              {comments.map((comment) => (
+                <div key={comment.id}>
+                  <Comment
+                    id={comment.id}
+                    author={comment.author}
+                    content={comment.content}
+                    createdAt={comment.createdAt}
+                    likes={comment.likes}
+                    onLike={handleLike}
+                    onAnswer={(id) => setAnswerModal(id)}
+                    onReport={(id) => setReportModal(id)}
+                  />
+                  {showAnswersIds.includes(comment.id) ? (
+                    <div className="ml-10 mt-6 grid gap-6">
+                      {comment.answers.map((answer) => (
+                        <Comment
+                          key={answer.id}
+                          id={answer.id}
+                          author={answer.author}
+                          content={answer.content}
+                          createdAt={answer.createdAt}
+                          likes={answer.likes}
+                          onLike={handleLike}
+                          onAnswer={(id) => setAnswerModal(id)}
+                          onReport={(id) => setReportModal(id)}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex justify-center mt-4">
+                      <BaseButton
+                        type="rounded"
+                        onClick={() =>
+                          setShowAnswersIds([...showAnswersIds, comment.id])
+                        }
+                      >
+                        Alle Antworten anzeigen
+                      </BaseButton>
+                    </div>
+                  )}
                 </div>
-              </div>
+              ))}
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div>Lädt</div>
+        )}
       </div>
+      {answerModal !== null && (
+        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 grid place-content-center px-3 z-50">
+          <div className="bg-white rounded-xl border border-100 p-3">
+            <textarea
+              className="border border-border-100 w-full mb-3 p-3 rounded-xl outline-none resize-none focus:border-primary"
+              cols={30}
+              rows={5}
+              placeholder="Neues Kommentar verfassen..."
+            />
+            <div
+              id="comment-buttons"
+              className="flex items-center gap-4 ml-auto w-fit"
+            >
+              <button onClick={handleAnswerCancel}>Abbrechen</button>
+              <BaseButton onClick={handleAnswerSubmit}>Kommentieren</BaseButton>
+            </div>
+          </div>
+        </div>
+      )}
+      {reportModal !== null && (
+        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 grid place-content-center px-3 z-50">
+          <div className="bg-white rounded-xl border border-100 p-3">
+            <p className="mb-4">
+              Bist du sicher, dass du diesen Kommentar melden möchtest?
+            </p>
+            <div className="flex items-center gap-4 ml-auto w-fit">
+              <button onClick={handleReportCancel}>Abbrechen</button>
+              <BaseButton onClick={handleReportSubmit}>Melden</BaseButton>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
