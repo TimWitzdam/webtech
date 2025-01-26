@@ -9,6 +9,11 @@ import Course from "../models/course.model";
 import CourseVideo from "../models/course-video.model";
 import { ICourseInformation } from "../types/CourseInformation";
 import { IFormattedComment } from "../types/FormattedComment";
+import UserVideo, { IUserVideo } from "../models/user-video.model";
+import VideoLike from "../models/comment-like.model";
+import CommentLike from "../models/comment-like.model";
+import CommentAnswer from "../models/comment-answer.model";
+import { IVideoComments } from "../types/VideoComments";
 
 export class VideoService {
   static async create(
@@ -36,11 +41,9 @@ export class VideoService {
     userId: Schema.Types.ObjectId,
     videoId: Schema.Types.ObjectId,
     text: string,
-    timestamp: number,
   ): Promise<Schema.Types.ObjectId | null> {
     const comment = new Comment({
       text,
-      timestamp,
     });
     const savedComment = await comment.save();
     if (!savedComment) return null;
@@ -56,9 +59,8 @@ export class VideoService {
       : null;
   }
 
-  static async getComments(
-    videoId: string,
-  ): Promise<IFormattedComment[] | null> {
+  // alle subcomments holen IVideoComments ist ein extend von IFormattedComment
+  static async getComments(videoId: string): Promise<IVideoComments[] | null> {
     const videoComments = await VideoComment.find({ videoId });
     if (!videoComments) return null;
 
@@ -72,15 +74,27 @@ export class VideoService {
         text: comment.text,
         createdAt: comment.createdAt,
         likes: comment.likes,
+        answers: [],
       };
     });
 
     const resolvedPromises = await Promise.all(commentPromises);
     const comments = resolvedPromises.filter(
-      (comment): comment is IFormattedComment => comment !== null,
+      (comment): comment is IVideoComments => comment !== null,
     );
     if (!comments) return null;
     return comments;
+  }
+
+  static async getUserData(
+    userId: Schema.Types.ObjectId,
+    videoId: Schema.Types.ObjectId,
+  ): Promise<IUserVideo | null> {
+    const userVideo = await UserVideo.find({ userId, videoId });
+    if (!userVideo || userVideo.length === 0) {
+      return null;
+    }
+    return userVideo[0];
   }
 
   static async getInformation(videoId: string): Promise<IVideo | null> {
@@ -149,5 +163,60 @@ export class VideoService {
     );
     if (!videoResults) return null;
     return videoResults;
+  }
+
+  static async checkIfLiked(
+    userId: Schema.Types.ObjectId,
+    commentId: Schema.Types.ObjectId,
+  ): Promise<boolean | null> {
+    const videoLike = await CommentLike.find({ userId, commentId });
+    if (!videoLike || videoLike.length === 0) {
+      return false;
+    }
+    return true;
+  }
+
+  static async likeComment(
+    userId: Schema.Types.ObjectId,
+    commentId: Schema.Types.ObjectId,
+  ): Promise<Schema.Types.ObjectId | null> {
+    const newVideoLike = new CommentLike({ userId, commentId });
+    const videoLikeDocument = await newVideoLike.save();
+    if (!videoLikeDocument) {
+      return null;
+    }
+    const comment = await Comment.findById(commentId);
+    if (!comment) {
+      return null;
+    }
+    comment.likes = comment.likes + 1;
+    const newCommentDocument = await comment.save();
+    if (!newCommentDocument) {
+      return null;
+    }
+
+    return videoLikeDocument._id as Schema.Types.ObjectId;
+  }
+
+  static async answerComment(
+    userId: Schema.Types.ObjectId,
+    commentId: Schema.Types.ObjectId,
+    text: string,
+  ): Promise<Schema.Types.ObjectId | null> {
+    const newComment = new Comment({ text });
+    const commentDocument = await newComment.save();
+    if (!commentDocument) {
+      return null;
+    }
+    const newAnswer = new CommentAnswer({
+      parentCommentId: commentId,
+      childrenCommentId: commentDocument._id,
+      userId,
+    });
+    const answerDocument = await newAnswer.save();
+    if (!answerDocument) {
+      return null;
+    }
+    return answerDocument._id as Schema.Types.ObjectId;
   }
 }

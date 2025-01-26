@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { VideoService } from "../services/video.service";
 import { ERROR_MESSAGE, FILE_PATH } from "../configs/app.config";
 import { isValidObjectId } from "mongoose";
+const { ObjectId } = require("mongoose").mongo;
 import * as fs from "fs";
 import mime from "mime";
 import { UserService } from "../services/user.service";
@@ -42,14 +43,9 @@ export class VideoController {
   }
 
   static async createComment(req: Request, res: Response) {
-    const { videoId, text, timestamp } = req.body;
+    const { videoId, text } = req.body;
     const userId = res.locals.decodedJWT;
-    const result = await VideoService.createComment(
-      userId,
-      videoId,
-      text,
-      timestamp,
-    );
+    const result = await VideoService.createComment(userId, videoId, text);
     if (!result) {
       res.status(500).json({ status: ERROR_MESSAGE });
       return;
@@ -73,9 +69,15 @@ export class VideoController {
 
   static async getInformation(req: Request, res: Response) {
     const videoId = req.params.videoId;
+    const userId = res.locals.decodedJWT;
 
     const videoInformation = await VideoService.getInformation(videoId);
     let videoCourses = await VideoService.getCourses(videoId);
+    let userVideo = await VideoService.getUserData(
+      userId,
+      new ObjectId(videoId),
+    );
+
     if (!videoInformation) {
       res.status(500).json({ status: ERROR_MESSAGE });
       return;
@@ -88,6 +90,10 @@ export class VideoController {
       information: {
         video: videoInformation,
         course: videoCourses,
+        user: {
+          progress: userVideo ? userVideo.progress : 0,
+          seen: userVideo ? userVideo.seen : false,
+        },
       },
     });
     return;
@@ -180,6 +186,45 @@ export class VideoController {
     };
 
     res.json({ video: result });
+    return;
+  }
+
+  static async likeComment(req: Request, res: Response) {
+    const userId = res.locals.decodedJWT;
+    const { commentId } = req.body;
+
+    const check = await VideoService.checkIfLiked(userId, commentId);
+    if (check) {
+      res.status(401).json({ status: "Bereits ein like gegeben!" });
+      return;
+    }
+
+    const like = await VideoService.likeComment(userId, commentId);
+    if (!like) {
+      res.status(500).json({ status: ERROR_MESSAGE });
+      return;
+    }
+
+    res.json({ like });
+    return;
+  }
+
+  static async answerComment(req: Request, res: Response) {
+    const userId = res.locals.decodedJWT;
+    const { commentId, text } = req.body;
+    if (!isValidObjectId(commentId)) {
+      res
+        .status(400)
+        .json({ status: "Keine oder falsche Kommentar-ID angegeben!" });
+      return;
+    }
+    const newAnswer = await VideoService.answerComment(userId, commentId, text);
+    if (!newAnswer) {
+      res.status(500).json({ status: ERROR_MESSAGE });
+      return;
+    }
+
+    res.json({ comment: newAnswer });
     return;
   }
 }

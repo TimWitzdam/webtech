@@ -4,6 +4,8 @@ import { videoCreateRequest } from "../models/video.create.request";
 import { authenticateJWT } from "../middlewares/authenticateJWT.middleware";
 import { VideoController } from "../controllers/video.controller";
 import { videoCommentRequest } from "../models/video.comment.request";
+import { videoLikeRequest } from "../models/video.like.request";
+import { commentAnswerRequest } from "../models/comment.answer.request";
 
 const videoRoutes = express.Router();
 
@@ -20,6 +22,20 @@ videoRoutes.post(
   validateSchema(videoCommentRequest),
   authenticateJWT,
   VideoController.createComment,
+);
+
+videoRoutes.post(
+  "/video/comment/answer",
+  validateSchema(commentAnswerRequest),
+  authenticateJWT,
+  VideoController.answerComment,
+);
+
+videoRoutes.post(
+  "/video/comment/like",
+  validateSchema(videoLikeRequest),
+  authenticateJWT,
+  VideoController.likeComment,
 );
 
 videoRoutes.get(
