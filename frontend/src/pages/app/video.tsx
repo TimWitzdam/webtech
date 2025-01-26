@@ -48,7 +48,8 @@ export default function VideoPage() {
         setVideoInformation(res.information);
 
         if (videoElement.current)
-          videoElement.current.currentTime = res.information.progress / 1000;
+          videoElement.current.currentTime =
+            res.information.user.progress / 1000;
       }
     }
 
