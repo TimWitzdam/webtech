@@ -19,7 +19,7 @@ For deployment it uses Docker and the preview instance is deployed on a Linux VP
 
 ## How to run
 
-Create a `.env` in the root folder containing `JWT_SECRET`, `MONGO_URL` (provided by us in the final submission), a video and image file path `FILE_PATH` (when using it with docker this must be "/app/media"), as well as a `VITE_BACKEND_URL`.
-Create a `.env` in the frontend folder containing `VITE_BACKEND_URL` and `VITE_COOKIE_DOMAIN` (for local testing that's just "localhost").
-
-Setup docker and run `docker-compose up -d`
+1. Create a `.env` in the root folder containing `JWT_SECRET`, `MONGO_URL` (provided by us in the final submission), a video and image file path `FILE_PATH` (when using it with docker this must be "/app/media"), as well as a `VITE_BACKEND_URL`.
+2. Create a `.env` in the frontend folder containing `VITE_BACKEND_URL` and `VITE_COOKIE_DOMAIN` (for local testing that's just "localhost").
+3. Setup docker
+4. Use `docker-compose up -d`
