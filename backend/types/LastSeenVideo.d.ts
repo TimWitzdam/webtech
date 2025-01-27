@@ -15,5 +15,6 @@ export interface ILastSeenVideo {
     _id: Schema.Types.ObjectId;
     name: string;
     slug: string;
+    emoji: string;
   }[];
 }

@@ -12,14 +12,28 @@ import request from "../../lib/request";
 import VideoInformation from "../../types/VideoInformation";
 import VideoData from "../../types/VideoData";
 
+export interface IFormattedComment {
+  id: string;
+  username: string;
+  role: string;
+  text: string;
+  createdAt: Date;
+  likes: number;
+}
+
+export interface IVideoComments extends IFormattedComment {
+  answers: IVideoComments[];
+}
+
 export default function VideoPage() {
   const { videoID } = useParams();
   const navigate = useNavigate();
   const [showCommentButtons, setShowCommentButtons] = useState(false);
-  const [showAnswersIds, setShowAnswersIds] = useState<number[]>([]);
-  const [answerModal, setAnswerModal] = useState<number | null>(null);
-  const [reportModal, setReportModal] = useState<number | null>(null);
-  const [videoComments, setVideoComments] = useState([]);
+  const [showAnswersIds, setShowAnswersIds] = useState<string[]>([]);
+  const [answerModal, setAnswerModal] = useState<string | null>(null);
+  const [reportModal, setReportModal] = useState<string | null>(null);
+  const [videoComments, setVideoComments] = useState<IVideoComments[] | []>([]);
+  const [newComment, setNewComment] = useState("");
   const [videoInformation, setVideoInformation] =
     useState<VideoInformation | null>(null);
   const [isVideoSaved, setIsVideoSaved] = useState(false);
@@ -28,111 +42,47 @@ export default function VideoPage() {
 
   const videoElement = useRef<HTMLVideoElement>(null);
 
+  async function fetchComments() {
+    const res = await request(`api/video/comments/${videoID}`);
+
+    if (res.error) {
+      console.error(res.error);
+    } else {
+      setVideoComments(res.comments);
+    }
+  }
+
+  async function fetchVideoInformation() {
+    const res = await request(`api/video/${videoID}/information`);
+
+    if (res.error) {
+      console.error(res.error);
+    } else {
+      setVideoInformation(res.information);
+
+      if (videoElement.current)
+        videoElement.current.currentTime = res.information.user.progress / 1000;
+    }
+  }
+
+  async function fetchSaved() {
+    const res = await request(`api/user/save`);
+
+    if (res.error) {
+      console.error(res.error);
+    } else {
+      const isSaved = res.videos.find(
+        (video: VideoData) => video.video._id === videoID,
+      );
+      setIsVideoSaved(!!isSaved);
+    }
+  }
+
   useEffect(() => {
-    async function fetchComments() {
-      const res = await request(`api/video/${videoID}/comments`);
-
-      if (res.error) {
-        console.error(res.error);
-      } else {
-        setVideoComments(res);
-      }
-    }
-
-    async function fetchVideoInformation() {
-      const res = await request(`api/video/${videoID}/information`);
-
-      if (res.error) {
-        console.error(res.error);
-      } else {
-        setVideoInformation(res.information);
-
-        if (videoElement.current)
-          videoElement.current.currentTime =
-            res.information.user.progress / 1000;
-      }
-    }
-
-    async function fetchSaved() {
-      const res = await request(`api/user/save`);
-
-      if (res.error) {
-        console.error(res.error);
-      } else {
-        const isSaved = res.videos.find(
-          (video: VideoData) => video.video._id === videoID,
-        );
-        setIsVideoSaved(!!isSaved);
-      }
-    }
-
     fetchComments();
     fetchVideoInformation();
     fetchSaved();
   }, []);
-
-  const comments = [
-    {
-      id: 1,
-      author: "Wim Titzdam",
-      content: "This is a great video!",
-      createdAt: new Date(),
-      likes: 12,
-      answers: [
-        {
-          id: 2,
-          author: "Wim Titzdam",
-          content: "This is a great video!",
-          createdAt: new Date(),
-          likes: 12,
-        },
-        {
-          id: 3,
-          author: "Wim Titzdam",
-          content: "This is a great video!",
-          createdAt: new Date(),
-          likes: 12,
-        },
-        {
-          id: 4,
-          author: "Wim Titzdam",
-          content: "This is a great video!",
-          createdAt: new Date(),
-          likes: 12,
-        },
-      ],
-    },
-    {
-      id: 300,
-      author: "Wim Titzdam",
-      content: "This is a great video!",
-      createdAt: new Date(),
-      likes: 12,
-      answers: [
-        {
-          id: 20,
-          author: "Wim Titzdam",
-          content: "This is a great video!",
-          createdAt: new Date(),
-          likes: 12,
-        },
-        {
-          id: 30,
-          author: "Wim Titzdam",
-          content: "This is a great video!",
-          createdAt: new Date(),
-          likes: 12,
-        },
-        {
-          id: 40,
-          author: "Wim Titzdam",
-          content: "This is a great video!",
-          createdAt: new Date(),
-          likes: 12,
-        },
-      ],
-    },
-  ];
 
   async function markAsRead() {
     await request(`api/user/seen`, {
@@ -153,6 +103,10 @@ export default function VideoPage() {
     setShowCommentButtons(e.type === "focus");
   }
 
+  function handleNewCommentChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    setNewComment(e.target.value || "");
+  }
+
   function handleNewCommentBlur() {
     setTimeout(() => {
       const clickedElement = document.activeElement;
@@ -171,12 +125,28 @@ export default function VideoPage() {
     setShowCommentButtons(false);
   }
 
-  function handleNewCommentSubmit() {
-    console.log("Comment submitted");
+  async function handleNewCommentSubmit() {
+    if (!newComment || newComment == "") {
+      return;
+    }
+    const res = await request(`api/video/comment`, {
+      method: "POST",
+      body: JSON.stringify({ videoId: videoID, text: newComment }),
+    });
+    if (!res.error) {
+      console.log(res.status);
+    }
   }
 
-  function handleLike(id: number) {
-    console.log("Like comment", id);
+  async function handleLike(id: string) {
+    const res = await request(`api/video/comment/like`, {
+      method: "POST",
+      body: JSON.stringify({ commentId: id.toString() }),
+    });
+    if (!res.error) {
+      console.log(res.like);
+      fetchComments();
+    }
   }
 
   function handleAnswerCancel() {
@@ -195,8 +165,19 @@ export default function VideoPage() {
     setReportModal(null);
   }
 
-  function handleReportSubmit() {
-    console.log("Report submitted", reportModal);
+  async function handleReportSubmit() {
+    const commentId = reportModal;
+    if (!commentId) {
+      return;
+    }
+    const res = await request(`api/video/comment/report`, {
+      method: "POST",
+      body: JSON.stringify({ commentId: commentId.toString() }),
+    });
+    if (!res.error) {
+      console.log(res.report);
+    }
+    setReportModal(null);
   }
 
   async function handleProgress(e: any) {
@@ -274,7 +255,7 @@ export default function VideoPage() {
             <div>Lädt</div>
           )}
         </div>
-        {comments ? (
+        {videoComments ? (
           <div>
             <div className="xl:border-b border-border-100 px-3">
               <div className="flex items-center gap-2 mt-5 xl:mt-3">
@@ -290,6 +271,7 @@ export default function VideoPage() {
                 placeholder="Neues Kommentar verfassen..."
                 onFocus={handleNewCommentFocus}
                 onBlur={handleNewCommentBlur}
+                onChange={handleNewCommentChange}
               />
               {showCommentButtons && (
                 <div
@@ -304,13 +286,13 @@ export default function VideoPage() {
               )}
             </div>
             <div className="mt-8 px-3 grid gap-10">
-              {comments.map((comment) => (
+              {videoComments.map((comment: IVideoComments) => (
                 <div key={comment.id}>
                   <Comment
                     id={comment.id}
-                    author={comment.author}
-                    content={comment.content}
-                    createdAt={comment.createdAt}
+                    author={comment.username}
+                    content={comment.text}
+                    createdAt={comment.createdAt.toString()}
                     likes={comment.likes}
                     onLike={handleLike}
                     onAnswer={(id) => setAnswerModal(id)}
@@ -318,13 +300,13 @@ export default function VideoPage() {
                   />
                   {showAnswersIds.includes(comment.id) ? (
                     <div className="ml-10 mt-6 grid gap-6">
-                      {comment.answers.map((answer) => (
+                      {comment.answers.map((answer: IFormattedComment) => (
                         <Comment
                           key={answer.id}
                           id={answer.id}
-                          author={answer.author}
-                          content={answer.content}
-                          createdAt={answer.createdAt}
+                          author={answer.username}
+                          content={answer.text}
+                          createdAt={answer.createdAt.toString()}
                           likes={answer.likes}
                           onLike={handleLike}
                           onAnswer={(id) => setAnswerModal(id)}

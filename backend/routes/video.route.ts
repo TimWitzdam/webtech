@@ -38,6 +38,13 @@ videoRoutes.post(
   VideoController.likeComment,
 );
 
+videoRoutes.post(
+  "/video/comment/report",
+  validateSchema(videoLikeRequest),
+  authenticateJWT,
+  VideoController.reportComment,
+);
+
 videoRoutes.get(
   "/video/comments/:videoId",
   authenticateJWT,

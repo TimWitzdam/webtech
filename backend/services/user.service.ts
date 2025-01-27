@@ -240,11 +240,11 @@ export class UserService {
   static async saveVideo(
     userId: Schema.Types.ObjectId,
     videoId: Schema.Types.ObjectId,
-  ): Promise<Schema.Types.ObjectId | null> {
+  ): Promise<Schema.Types.ObjectId | boolean | null> {
     const alreadySaved = await Saved.find({ userId, videoId });
     if (alreadySaved.length > 0) {
       const result = await Saved.deleteOne({ userId, videoId });
-      return result;
+      return result.acknowledged;
     }
 
     const newSavedVideo = new Saved({ userId, videoId });
@@ -294,10 +294,22 @@ export class UserService {
         userId,
         videoId: saved.videoId,
       });
-      if (!userVideo) {
-        return null;
-      }
       const seen = await this.checkIfSeen(userId, saved.videoId.toString());
+
+      if (!userVideo || userVideo.length === 0) {
+        return {
+          video: {
+            _id: video._id as Schema.Types.ObjectId,
+            title: video.title,
+            length: video.length,
+            creationDate: video.creationDate,
+          },
+          lastSeen: new Date(),
+          progress: 0,
+          foundIn: courseResults,
+          seen: seen ? seen : false,
+        };
+      }
 
       return {
         video: {

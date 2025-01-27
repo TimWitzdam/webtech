@@ -192,6 +192,12 @@ export class VideoController {
   static async likeComment(req: Request, res: Response) {
     const userId = res.locals.decodedJWT;
     const { commentId } = req.body;
+    if (!isValidObjectId(commentId)) {
+      res
+        .status(400)
+        .json({ status: "Keine oder falsche Kommentar-ID angegeben!" });
+      return;
+    }
 
     const check = await VideoService.checkIfLiked(userId, commentId);
     if (check) {
@@ -225,6 +231,32 @@ export class VideoController {
     }
 
     res.json({ comment: newAnswer });
+    return;
+  }
+
+  static async reportComment(req: Request, res: Response) {
+    const userId = res.locals.decodedJWT;
+    const { commentId } = req.body;
+    if (!isValidObjectId(commentId)) {
+      res
+        .status(400)
+        .json({ status: "Keine oder falsche Kommentar-ID angegeben!" });
+      return;
+    }
+
+    const check = await VideoService.checkIfReported(userId, commentId);
+    if (check) {
+      res.status(401).json({ status: "Bereits gemeldet!" });
+      return;
+    }
+
+    const report = await VideoService.reportComment(userId, commentId);
+    if (!report) {
+      res.status(500).json({ status: ERROR_MESSAGE });
+      return;
+    }
+
+    res.json({ report });
     return;
   }
 }

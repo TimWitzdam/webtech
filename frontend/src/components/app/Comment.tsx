@@ -7,14 +7,14 @@ import { formatDate } from "../../lib/formatDate";
 import { useState } from "react";
 
 type Props = {
-  id: number;
+  id: string;
   author: string;
   content: string;
   createdAt: string;
   likes: number;
-  onLike: (id: number) => void;
-  onAnswer: (id: number) => void;
-  onReport: (id: number) => void;
+  onLike: (id: string) => void;
+  onAnswer: (id: string) => void;
+  onReport: (id: string) => void;
 };
 
 export default function Comment(props: Props) {

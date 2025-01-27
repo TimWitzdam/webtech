@@ -12,8 +12,9 @@ import { IFormattedComment } from "../types/FormattedComment";
 import UserVideo, { IUserVideo } from "../models/user-video.model";
 import VideoLike from "../models/comment-like.model";
 import CommentLike from "../models/comment-like.model";
-import CommentAnswer from "../models/comment-answer.model";
+import CommentAnswer, { ICommentAnswer } from "../models/comment-answer.model";
 import { IVideoComments } from "../types/VideoComments";
+import CommentReport from "../models/comment-report.model";
 
 export class VideoService {
   static async create(
@@ -68,13 +69,43 @@ export class VideoService {
       let comment = await Comment.findById(videoComment.commentId);
       let user = await User.findById(videoComment.userId);
       if (!comment || !user) return null;
+
+      const answerIds = await CommentAnswer.find({
+        parentCommentId: comment._id,
+      });
+      const answerCommentPromises = answerIds.map(
+        async (
+          answerComment: ICommentAnswer,
+        ): Promise<IFormattedComment | null> => {
+          const comment = await Comment.findById(
+            answerComment.childrenCommentId,
+          );
+          const user = await User.findById(answerComment.userId);
+          if (!comment || !user) return null;
+
+          return {
+            id: comment._id as Schema.Types.ObjectId,
+            username: user.username,
+            role: user.role,
+            text: comment.text,
+            createdAt: comment.createdAt,
+            likes: comment.likes,
+          };
+        },
+      );
+      const answerCommentDocuments = await Promise.all(answerCommentPromises);
+      const answers = answerCommentDocuments.filter(
+        (comment): comment is IFormattedComment => comment !== null,
+      );
+
       return {
+        id: comment._id,
         username: user.username,
         role: user.role,
         text: comment.text,
         createdAt: comment.createdAt,
         likes: comment.likes,
-        answers: [],
+        answers: answers,
       };
     });
 
@@ -176,6 +207,17 @@ export class VideoService {
     return true;
   }
 
+  static async checkIfReported(
+    userId: Schema.Types.ObjectId,
+    commentId: Schema.Types.ObjectId,
+  ): Promise<boolean | null> {
+    const videoReport = await CommentReport.find({ userId, commentId });
+    if (!videoReport || videoReport.length === 0) {
+      return false;
+    }
+    return true;
+  }
+
   static async likeComment(
     userId: Schema.Types.ObjectId,
     commentId: Schema.Types.ObjectId,
@@ -196,6 +238,19 @@ export class VideoService {
     }
 
     return videoLikeDocument._id as Schema.Types.ObjectId;
+  }
+
+  static async reportComment(
+    userId: Schema.Types.ObjectId,
+    commentId: Schema.Types.ObjectId,
+  ): Promise<Schema.Types.ObjectId | null> {
+    const newReport = new CommentReport({ userId, commentId });
+    const videoReportDocument = await newReport.save();
+    if (!videoReportDocument) {
+      return null;
+    }
+
+    return videoReportDocument._id as Schema.Types.ObjectId;
   }
 
   static async answerComment(
