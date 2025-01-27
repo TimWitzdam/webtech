@@ -42,6 +42,7 @@ export default function VideoPage() {
 
   const videoElement = useRef<HTMLVideoElement>(null);
   const answerTextarea = useRef<HTMLTextAreaElement>(null);
+  const newCommentTextarea = useRef<HTMLTextAreaElement>(null);
 
   async function fetchComments() {
     const res = await request(`api/video/comments/${videoID}`);
@@ -135,7 +136,10 @@ export default function VideoPage() {
       body: JSON.stringify({ videoId: videoID, text: newComment }),
     });
     if (!res.error) {
-      console.log(res.status);
+      fetchComments();
+      setNewComment("");
+      newCommentTextarea.current!.value = "";
+      setShowCommentButtons(false);
     }
   }
 
@@ -282,6 +286,7 @@ export default function VideoPage() {
                 onFocus={handleNewCommentFocus}
                 onBlur={handleNewCommentBlur}
                 onChange={handleNewCommentChange}
+                ref={newCommentTextarea}
               />
               {showCommentButtons && (
                 <div
