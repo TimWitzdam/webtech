@@ -1,0 +1,25 @@
+services:
+  backend:
+    container_name: video-library-backend
+    image: video-library-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: base
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      MONGO_URL: ${MONGO_URL}
+      FILE_PATH: ${FILE_PATH}
+    ports:
+      - "3000:3000"
+  frontend:
+    container_name: video-library-frontend
+    image: video-library-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    environment:
+      VITE_BACKEND_URL: ${VITE_BACKEND_URL}
+    ports:
+      - "5173:80"
