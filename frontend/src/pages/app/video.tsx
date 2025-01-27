@@ -41,6 +41,7 @@ export default function VideoPage() {
   const [ignoreProgressChange, setIgnoreProgressChange] = useState(false);
 
   const videoElement = useRef<HTMLVideoElement>(null);
+  const answerTextarea = useRef<HTMLTextAreaElement>(null);
 
   async function fetchComments() {
     const res = await request(`api/video/comments/${videoID}`);
@@ -144,7 +145,6 @@ export default function VideoPage() {
       body: JSON.stringify({ commentId: id.toString() }),
     });
     if (!res.error) {
-      console.log(res.like);
       fetchComments();
     }
   }
@@ -157,8 +157,18 @@ export default function VideoPage() {
     setAnswerModal(null);
   }
 
-  function handleAnswerSubmit() {
-    console.log("Answer submitted", answerModal);
+  async function handleAnswerSubmit() {
+    const res = await request(`api/video/comment/answer`, {
+      method: "POST",
+      body: JSON.stringify({
+        commentId: answerModal,
+        text: answerTextarea.current?.value,
+      }),
+    });
+    if (!res.error) {
+      fetchComments();
+      setAnswerModal(null);
+    }
   }
 
   function handleReportCancel() {
@@ -315,15 +325,19 @@ export default function VideoPage() {
                       ))}
                     </div>
                   ) : (
-                    <div className="flex justify-center mt-4">
-                      <BaseButton
-                        type="rounded"
-                        onClick={() =>
-                          setShowAnswersIds([...showAnswersIds, comment.id])
-                        }
-                      >
-                        Alle Antworten anzeigen
-                      </BaseButton>
+                    <div>
+                      {comment.answers.length > 0 && (
+                        <div className="flex justify-center mt-4">
+                          <BaseButton
+                            type="rounded"
+                            onClick={() =>
+                              setShowAnswersIds([...showAnswersIds, comment.id])
+                            }
+                          >
+                            Alle Antworten anzeigen
+                          </BaseButton>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -342,6 +356,7 @@ export default function VideoPage() {
               cols={30}
               rows={5}
               placeholder="Neues Kommentar verfassen..."
+              ref={answerTextarea}
             />
             <div
               id="comment-buttons"

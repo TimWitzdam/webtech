@@ -28,7 +28,7 @@ export default function Login() {
     if (res.ok) {
       const data = await res.json();
       if (!data) return;
-      document.cookie = `auth_session=${data.token}; max-age=604800; path=/; Secure; SameSite=None;`;
+      document.cookie = `auth_session=${data.token}; max-age=604800; path=/; Secure; SameSite=None; Domain=${import.meta.env.VITE_COOKIE_DOMAIN}`;
       setSuccess("Login erfolgreich. Weiterleitung...");
       setTimeout(() => {
         window.location.href = "/app";
